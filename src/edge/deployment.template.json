@@ -78,12 +78,8 @@
                   ]
                 }
               }
-            },
-            "env": {
-              "EnableDiagnosticLogging": {
-                "value": "True"
-              }
             }
+
           },
           "rtspsim": {
             "version": "1.0",

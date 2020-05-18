@@ -78,11 +78,6 @@
                   ]
                 }
               }
-            },
-            "env": {
-              "EnableDiagnosticLogging": {
-                "value": "True"
-              }
             }
           },
           "yolov3": {
