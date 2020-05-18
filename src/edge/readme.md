@@ -17,7 +17,7 @@ Besides the modules already defined in deployment.template.json, this deployment
 
 ### deployment.objectCounter.template.json
 
-Besides the modules already defined in deployment.yolov3.template.json, this deployment manifest template references the sample objectCounter module (source code for which can be found in ./modules/objectCounter). This template also has message routes defined to send messages from LVA to objectCounter module and from objectCounter module to LVA, to enable the scenario of recording video clips when objects of a specified type and above a specified threshold value are found.
+Besides the modules already defined in deployment.yolov3.template.json, this deployment manifest template references the sample objectCounter module (source code for which can be found in ./modules/objectCounter). This template also has message routes defined to send messages from the lvaEdge module to the objectCounter module and vice versa, to enable the scenario of recording video clips when objects of a specified type and above a specified threshold value are found.
 
 ## Deployment manifest template variables
 
@@ -36,13 +36,13 @@ OUTPUT_VIDEO_FOLDER_ON_DEVICE=""
 INPUT_VIDEO_FOLDER_ON_DEVICE=""
 ```
 
-To generate a deployment manifest from the template, right click on the template file and select "Generate IoT Edge deployment manifest". This will create the corresponding deployment manifest file in **./config** folder.
+To generate a deployment manifest from the template, open your local clone of this git repository in Visual Studio Code, have the [Azure Iot Tools](https://marketplace.visualstudio.com/items?itemName=vsciot-vscode.azure-iot-tools) extension installed, right click on the template file and select "Generate IoT Edge deployment manifest". This will create the corresponding deployment manifest file in **./config** folder.
 
 ## Sample edge modules
 
 ### objectCounter
 
-The folder **./modules/objectCounter** contains source code for an IoT Edge module that counts objects of a specified type and above a specified threshold value (these need to be specified as twin properties). The module expects messages emitted by yolov3 module (referenced above).
+The folder **./modules/objectCounter** contains source code for an IoT Edge module that counts objects of a specified type and above a specified threshold value (these are specified as twin properties in deployment.objectCounter.template.json). The module expects messages emitted by yolov3 module (referenced above).
 
 ## Learn more
 

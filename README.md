@@ -1,11 +1,12 @@
 ---
 page_type: sample
 languages:
-- csharp
+  - csharp
 products:
-- Live Video Analytics on IoT Edge
-description: "Live Video Analytics on IoT Edge enables you to capture, record, and analyze videos using AI"
-urlFragment: "live-video-analytics-iot-edge-csharp"
+  - azure
+  - azure-media-services
+  - azure-live-video-analytics
+description: "The samples in this repo show how to use the Live Video Analytics on IoT Edge that enables you to capture, record, and analyze videos using AI."  
 ---
 
 # Live Video Analytics on IoT Edge samples
