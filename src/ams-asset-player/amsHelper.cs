@@ -105,7 +105,7 @@ namespace ams_asset_player
                 }
                 
                 StreamingEndpoint sep = await GetDefaultStreamingEndpointAsync();
-                streamingUrl = "https://" + sep.HostName + "/" + sl.StreamingLocatorId + "/manifest.ism/manifest";
+                streamingUrl = "https://" + sep.HostName + "/" + sl.StreamingLocatorId + "/content.ism/manifest";
             }
             catch(Exception)
             {
@@ -124,7 +124,7 @@ namespace ams_asset_player
                 StreamingLocator sl = GetStreamingLocator(assetName);
                 StreamingEndpoint sep = await GetDefaultStreamingEndpointAsync();
 
-                string availableMediaTimeRangesUrl = "https://" + sep.HostName + "/" + sl.StreamingLocatorId + "/manifest.ism/availableMedia?precision=" + precision +
+                string availableMediaTimeRangesUrl = "https://" + sep.HostName + "/" + sl.StreamingLocatorId + "/content.ism/availableMedia?precision=" + precision +
                                                         "&startTime=" + startTime + "&endTime=" + endTime;
 
                 availableMediaTimeRanges = await DownloadFromUrlAsync(availableMediaTimeRangesUrl);                
