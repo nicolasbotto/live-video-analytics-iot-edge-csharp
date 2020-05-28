@@ -96,7 +96,8 @@
               "createOptions": {
                 "HostConfig": {
                   "Binds": [
-                    "$INPUT_VIDEO_FOLDER_ON_DEVICE:/live/mediaServer/media"
+                    "$INPUT_VIDEO_FOLDER_ON_DEVICE:/live/mediaServer/media",
+                    "/var/local/mediaservices/:/var/lib/azuremediaservices"
                   ]
                 }
               }
@@ -129,8 +130,8 @@
         "diagnosticsEventsOutputName": "AmsDiagnostics",
         "operationalEventsOutputName": "AmsOperational",
         "logLevel": "Information",
-        "logCategories": "Application,Event",
-        "allowUnsecuredEndpoints": "true",
+        "logCategories": "Application,Events",
+        "allowUnsecuredEndpoints": true,
         "telemetryOptOut": false
       }
     }
