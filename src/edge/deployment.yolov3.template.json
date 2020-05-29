@@ -70,7 +70,8 @@
                     }
                   },
                   "Binds": [
-                    "$OUTPUT_VIDEO_FOLDER_ON_DEVICE:/var/media/"
+                    "$OUTPUT_VIDEO_FOLDER_ON_DEVICE:/var/media/",
+                    "$APPDATA_FOLDER_ON_DEVICE:/var/lib/azuremediaservices"
                   ]
                 }
               }
@@ -96,8 +97,7 @@
               "createOptions": {
                 "HostConfig": {
                   "Binds": [
-                    "$INPUT_VIDEO_FOLDER_ON_DEVICE:/live/mediaServer/media",
-                    "/var/local/mediaservices/:/var/lib/azuremediaservices"
+                    "$INPUT_VIDEO_FOLDER_ON_DEVICE:/live/mediaServer/media"
                   ]
                 }
               }

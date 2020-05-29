@@ -70,7 +70,8 @@
                     }
                   },
                   "Binds": [
-                    "$OUTPUT_VIDEO_FOLDER_ON_DEVICE:/var/media/"
+                    "$OUTPUT_VIDEO_FOLDER_ON_DEVICE:/var/media/",
+                    "$APPDATA_FOLDER_ON_DEVICE:/var/lib/azuremediaservices"
                   ]
                 }
               }
