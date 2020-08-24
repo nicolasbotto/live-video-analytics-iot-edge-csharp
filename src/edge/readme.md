@@ -16,7 +16,12 @@ This file is a deployment manifest template that has the following modules defin
 In addition to the modules defined in deployment.template.json, this deployment manifest template includes the [yolov3 module](https://github.com/Azure/live-video-analytics/tree/master/utilities/video-analysis/yolov3-onnx). This is an IoT Edge module that runs the YoloV3 ONNX model behind an HTTP endpoint.
 
 ### deployment.grpcyolov3icpu.template.json  
-This deployment manifest changes the consumed yolov3 service over the previous. It uses gRPC protocol to communicate with the yolov3 extension.
+
+In addition to the modules defined in deployment.template.json, this deployment manifest template includes this [yolov3 module](https://github.com/Azure/live-video-analytics/tree/master/utilities/video-analysis/notebooks/Yolo/yolov3/yolov3-grpc-icpu-onnx/lvaextension). This IoT Edge module runs the YoloV3 ONNX model behind a gRPC endpoint. This template is used in [this](https://aka.ms/lva-grpc-quickstart) quickstart.
+
+### deployment.openvino.template.json  
+
+In addition to the modules defined in deployment.template.json, this deployment manifest template includes the [OpenVINO™ Model Server – AI Extension](https://aka.ms/lva-intel-ovms) module. This inference server module contains the OpenVINO™ Model Server (OVMS), an inference server powered by the OpenVINO™ toolkit, that is highly optimized for computer vision workloads and developed for Intel architectures. This template is used in [this](https://aka.ms/lva-intel-ovms-tutorial) tutorial.
 
 ### deployment.objectCounter.template.json
 
