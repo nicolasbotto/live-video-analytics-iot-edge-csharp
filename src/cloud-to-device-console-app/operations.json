@@ -6,33 +6,21 @@
             "opParams": {}
         },
         {
-            "opName": "WaitForInput",
-            "opParams": {
-                "message": "Press Enter to continue"
-            }
-        },
-        {
             "opName": "GraphInstanceList",
             "opParams": {}
         },
         {
-            "opName": "WaitForInput",
-            "opParams": {
-                "message": "Press Enter to continue"
-            }
-        },
-        {
             "opName": "GraphTopologySet",
             "opParams": {
-                "topologyUrl": "https://raw.githubusercontent.com/Azure/live-video-analytics/master/MediaGraph/topologies/motion-detection/topology.json"
+                "topologyUrl": "https://raw.githubusercontent.com/Azure/live-video-analytics/master/MediaGraph/topologies/httpExtension/topology.json"
             }
         },
         {
             "opName": "GraphInstanceSet",
             "opParams": {
-                "name": "Sample-Graph-1",
+                "name": "SampleGraph1",
                 "properties": {
-                    "topologyName": "MotionDetection",
+                    "topologyName": "InferencingWithHttpExtension",
                     "description": "Sample graph description",
                     "parameters": [
                         {
@@ -46,7 +34,11 @@
                         {
                             "name": "rtspPassword",
                             "value": "testpassword"
-                        }
+                        },
+                        {
+                            "name" : "inferencingUrl",
+                            "value" : "http://lvaExtension:8080/score"
+                        }                  
                     ]
                 }
             }
@@ -54,7 +46,7 @@
         {
             "opName": "GraphInstanceActivate",
             "opParams": {
-                "name": "Sample-Graph-1"
+                "name": "SampleGraph1"
             }
         },
         {
@@ -70,13 +62,13 @@
         {
             "opName": "GraphInstanceDeactivate",
             "opParams": {
-                "name": "Sample-Graph-1"
+                "name": "SampleGraph1"
             }
         },
         {
             "opName": "GraphInstanceDelete",
             "opParams": {
-                "name": "Sample-Graph-1"
+                "name": "SampleGraph1"
             }
         },
         {
@@ -84,32 +76,15 @@
             "opParams": {}
         },
         {
-            "opName": "WaitForInput",
-            "opParams": {
-                "message": "Press Enter to continue"
-            }
-        },
-        {
             "opName": "GraphTopologyDelete",
             "opParams": {
-                "name": "MotionDetection"
+                "name": "InferencingWithHttpExtension"
             }
         },
-        {
-            "opName": "WaitForInput",
-            "opParams": {
-                "message": "Press Enter to continue"
-            }
-        },
+
         {
             "opName": "GraphTopologyList",
             "opParams": {}
-        },
-        {
-            "opName": "WaitForInput",
-            "opParams": {
-                "message": "Press Enter to continue"
-            }
         }
     ]
 }

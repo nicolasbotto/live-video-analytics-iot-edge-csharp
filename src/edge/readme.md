@@ -11,6 +11,10 @@ This file is a deployment manifest template that has the following modules defin
 * rtspsim - [RTSP simulator module](https://github.com/Azure/live-video-analytics/tree/master/utilities/rtspsim-live555)
 * lvaEdge - Live Video Analytics on IoT Edge module
 
+### deployment.httpExtension.template.json
+
+In addition to the moduels defined in deployment.template.json, this deployment manifest template includes a sample httpExtension module (source code for which can be found in ./modules/httpExtension). The sample httpExtension module takes video frames as input via HTTP, calculates the average color, classifes the image as 'light' or 'dark', and returns the results in the HTTP response.
+
 ### deployment.yolov3.template.json
 
 In addition to the modules defined in deployment.template.json, this deployment manifest template includes the [yolov3 module](https://github.com/Azure/live-video-analytics/tree/master/utilities/video-analysis/yolov3-onnx). This is an IoT Edge module that runs the YoloV3 ONNX model behind an HTTP endpoint.
@@ -53,6 +57,10 @@ To generate a deployment manifest from the template, open your local clone of th
 ### objectCounter
 
 The folder **./modules/objectCounter** contains source code for an IoT Edge module that counts objects of a specified type and with a confidence above a specified threshold value (these are specified as twin properties in deployment.objectCounter.template.json). The module expects messages emitted by yolov3 module (referenced above).
+
+### httpExtension
+
+The folder **./modules/httpExtension** contains source code for an IoT Edge module that exposes a HTTP endpoint where video frames can be posted. Upon receiving the frames, the module calculates the average color and classifies the image as 'light' or 'dark' and returns the result (using the inference schema defined by LVA) in the HTTP response.
 
 ## Learn more
 
