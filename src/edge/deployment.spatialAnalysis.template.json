@@ -161,10 +161,10 @@
 								"value": "accept"
 							},
 							"BILLING_ENDPOINT": {
-								"value": "<Use one key from Archon azure resource (keys page)>"
+								"value": "<Use endpoint from Archon azure resource (overview page)>"
 							},
 							"API_KEY": {
-								"value": "<Use endpoint from Archon azure resource (overview page)>"
+								"value": "<Use one key from Archon azure resource (keys page)>"
 							}
 						}
 					}
