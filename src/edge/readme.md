@@ -29,7 +29,7 @@ In addition to the modules defined in deployment.template.json, this deployment 
 
 ### deployment.spatialAnalysis.template.json  
 
-In addition to the modules defined in deployment.template.json, this deployment manifest template includes the [Computer Vision for spatial analysis AI module from Azure Cognitive Services](https://azure.microsoft.com/services/cognitive-services/computer-vision/). This module supports operations that enable you to count people in a designated zone within the camera’s field of view, to track when a person crosses a designated line or area, or when people violate a distance rule. This template is used in [this](https://aka.ms/lva-spatial-analysis) tutorial.
+In addition to the modules defined in deployment.template.json, this deployment manifest template includes the [Computer Vision for spatial analysis AI module from Azure Cognitive Services](https://docs.microsoft.com/en-us/azure/cognitive-services/computer-vision/spatial-analysis-container?tabs=azure-stack-edge). This module supports operations that enable you to count people in a designated zone within the camera’s field of view, to track when a person crosses a designated line or area, or when people violate a distance rule. This template is used in [this](https://aka.ms/lva-spatial-analysis) tutorial.
 
 ### deployment.yolov3.template.json
 
