@@ -34,11 +34,11 @@ namespace httpExtension.Processors
             var inference = new Inference
             {
                 Type = "classification",
-                SubType = colorIntensity,
+                SubType = "colorIntensity",
                 Classification = new Classification()
                 {
                     Confidence = 1.0,
-                    Value = $"value: {image.Size}"
+                    Value = colorIntensity
                 }
             };
 
