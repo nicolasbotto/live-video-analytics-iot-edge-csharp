@@ -28,7 +28,7 @@ namespace httpExtension.Controllers
         {
             try
             {
-                logger.LogInformation("Request received.");
+                logger.LogInformation("Process image request received.");
 
                 var stream = new MemoryStream();
                 await Request.Body.CopyToAsync(stream);

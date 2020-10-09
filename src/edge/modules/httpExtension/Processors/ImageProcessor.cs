@@ -22,8 +22,6 @@ namespace httpExtension.Processors
         {
             var grayScaleImage = ToGrayScale(image);
 
-            grayScaleImage.Save(@"c:\temp\sample.jpg");
-
             byte[] imageBytes = GetBytes(grayScaleImage);
 
             var totalColor = imageBytes.Sum(x => x);
