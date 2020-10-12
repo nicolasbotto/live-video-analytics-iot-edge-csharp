@@ -9,7 +9,9 @@ using System.IO;
 using System.Linq;
 
 namespace httpExtension.Processors
-{
+{    
+    /// <summary>Class <c>ImageProcessor</c> is responsible for processing an <paramref name="image"/>.
+    /// </summary>
     public class ImageProcessor
     {
         private readonly ILogger logger;
@@ -18,6 +20,10 @@ namespace httpExtension.Processors
             this.logger = logger;
         }
 
+        /// <summary>This method converts an image to grayscale and determines if its color intensity is dark or light
+        /// <param name="image">The <paramref name="image"/> to process.</param>
+        /// <returns>An Inferecence instance.</returns>
+        /// </summary>
         public Inference ProcessImage(Image image)
         {
             var grayScaleImage = ToGrayScale(image);
@@ -45,6 +51,10 @@ namespace httpExtension.Processors
             return inference;
         }
 
+        /// <summary>This method converts an image to grayscale
+        /// <param name="image">The <paramref name="image"/>.</param>
+        /// <returns>An Bitmap.</returns>
+        /// </summary>
         private Bitmap ToGrayScale(Image source)
         {
             Bitmap grayscaleBitmap = new Bitmap(source.Width, source.Height);
@@ -75,6 +85,10 @@ namespace httpExtension.Processors
             return grayscaleBitmap;
         }
 
+        /// <summary>This method converts an image to a byte array 
+        /// <param name="image">The <paramref name="image"/>.</param>
+        /// <returns>A byte array.</returns>
+        /// </summary>
         private byte[] GetBytes(Bitmap image)
         {
             MemoryStream stream = new MemoryStream();

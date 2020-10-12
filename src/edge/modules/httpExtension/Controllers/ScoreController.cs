@@ -14,6 +14,8 @@ namespace httpExtension.Controllers
     [ApiController]
     [Produces("application/json")]
     [Route("[controller]")]
+    /// <summary>Class <c>ScoreController</c> is responsible for handling the http requests.
+    /// </summary>
     public class ScoreController : ControllerBase
     {
         private readonly ILogger<ScoreController> logger;
@@ -24,6 +26,12 @@ namespace httpExtension.Controllers
         }
 
         [HttpPost]
+        /// <summary>This method handles the http request from LVA and returns an Inference result
+        /// <returns>
+        /// Http status 200: if the image was successfully processed a JSON representation of an Inference instance is returned.
+        /// Http status 400: if there was an error processing the image.
+        /// </returns>
+        /// </summary>
         public async Task<IActionResult> ProcessImage()
         {
             try
