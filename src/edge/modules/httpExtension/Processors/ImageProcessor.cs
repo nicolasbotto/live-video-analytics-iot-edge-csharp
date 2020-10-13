@@ -23,6 +23,11 @@ namespace httpExtension.Processors
         /// <summary>This method converts an image to grayscale and determines if its color intensity is dark or light
         /// <param name="image">The <paramref name="image"/> to process.</param>
         /// <returns>An Inferecence instance.</returns>
+        /// <remarks>
+        /// You can replace this class with the one including your image processing logic implementation. Your class should have a method named 
+        /// Inference ProcessImage(Image image) that contains the implementation. Finally you'll have update the ScoreController's ProcessImage method to create an 
+        /// instance of your class and invoke the ProcessImage method.
+        /// </remarks>
         /// </summary>
         public Inference ProcessImage(Image image)
         {
