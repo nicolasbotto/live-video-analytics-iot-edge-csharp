@@ -1,4 +1,4 @@
-# Http Extension module.
+# Http Extension module
 
 The HTTP extension module enables your own IoT Edge module to accept decoded video frames as an http POST request. 
 
