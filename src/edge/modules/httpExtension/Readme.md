@@ -127,12 +127,16 @@ If successful, you will see JSON printed on your screen that looks something lik
 
 ```JSON
 {
-  "type": "classification",
-  "subType": "colorIntensity",
-  "classification": {
-    "confidence": 1,
-    "value": "dark"
-  }
+  "inferences": [
+    {
+      "type": "classification",
+      "subType": "colorIntensity",
+      "classification": {
+        "confidence": 1,
+        "value": "dark"
+      }
+    }
+  ]
 }
 ```
 

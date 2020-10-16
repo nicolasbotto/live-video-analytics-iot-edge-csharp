@@ -3,6 +3,7 @@
 
 using httpExtension.Models;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -25,11 +26,11 @@ namespace httpExtension.Processors
         /// <returns>An Inferecence instance.</returns>
         /// <remarks>
         /// You can replace this class with the one including your image processing logic implementation. Your class should have a method named 
-        /// Inference ProcessImage(Image image) that contains the implementation. Finally you'll have update the ScoreController's ProcessImage method to create an 
+        /// IList<Inference> ProcessImage(Image image) that contains the implementation. Finally you'll have update the ScoreController's ProcessImage method to create an 
         /// instance of your class and invoke the ProcessImage method.
         /// </remarks>
         /// </summary>
-        public Inference ProcessImage(Image image)
+        public InferenceResponse ProcessImage(Image image)
         {
             var grayScaleImage = ToGrayScale(image);
 
@@ -42,7 +43,7 @@ namespace httpExtension.Processors
 
             logger.LogInformation($"Average color = {avgColor}");
 
-            var inference = new Inference
+            var response = new InferenceResponse { Inferences = new[] { new Inference
             {
                 Type = "classification",
                 SubType = "colorIntensity",
@@ -51,9 +52,9 @@ namespace httpExtension.Processors
                     Confidence = 1.0,
                     Value = colorIntensity
                 }
-            };
+            }}};
 
-            return inference;
+            return response;
         }
 
         /// <summary>This method converts an image to grayscale
