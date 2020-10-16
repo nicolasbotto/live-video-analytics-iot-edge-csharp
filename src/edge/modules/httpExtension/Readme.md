@@ -80,7 +80,7 @@ The topology (i.e. https://github.com/Azure/live-video-analytics/blob/master/Med
         "name": "inferencingUrl",
         "type": "String",
         "description": "inferencing Url",
-        "default": "https://<REPLACE-WITH-IP-NAME>/score"
+        "default": "https://<REPLACE-WITH-IP-OR-CONTAINER-NAME>/score"
       },
 ```
 * Configuration
@@ -152,7 +152,7 @@ Test the container using the following commands
 To get the response of the processed image, use the following command
 
 ```bash
-   curl -X POST https://<REPLACE-WITH-IP-OR-NAME>/score -H "Content-Type: image/jpeg" --data-binary @<image_file_in_jpeg>
+   curl -X POST https://<REPLACE-WITH-IP-OR-CONTAINER-NAME>/score -H "Content-Type: image/jpeg" --data-binary @<image_file_in_jpeg>
 ```
 
 If successful, you will see JSON printed on your screen that looks something like this
