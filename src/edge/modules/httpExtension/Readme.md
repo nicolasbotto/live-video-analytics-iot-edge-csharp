@@ -7,6 +7,38 @@ The HTTP extension module enables your own IoT Edge module to accept decoded vid
 1. [Install Docker](http://docs.docker.com/docker-for-windows/install/) on your machine
 2. Install [curl](http://curl.haxx.se/)
 
+### Design
+The HTTP extension module is an ASP.NET Core web api built to handle requests using controllers. Let's do a quick walkthrough the files:
+
+*Program.cs*: this is the entry point of the application. It is responsible for the creation of the .NET Generic Host.
+
+```
+IHostBuilder CreateHostBuilder(string[] args)
+```
+This method creates and configures the Host, we specify in which url the HTTP extension module will listen on and specify the start up type.
+In the excerpt below we set the the HTTP extension module to listen on port 8080. 
+
+```
+.UseUrls("http://*:8080")
+.UseStartup<Startup>();
+```
+*Note:* Please keep in mind that if you modify the port you'll have to update it as well in the **EXPOSE** instruction of the Dockerfile.
+
+
+*Startup.cs*: this class used for configuring services and the HTTP request pipeline.
+
+
+*Controllers\ScoreController.cs*: this class is responsible for handling the http POST request sent from LVA. The request will contain in its body the decoded frame. The ScoreController reads the decoded frame from the request's body, builds an image and processes it using the ImageProcessor to get the Inference response. If the processing was successful a JSON represention of the Inference response is returned with http status code 200. In case there was an error, an instance of BadRequestObject containing the error description and http status 400 is returned.
+
+
+*Processors\ImageProcessor.cs*: this class is responsible for processing the image. In a nutshell, it converts an image to grayscale and determines if its color intensity is dark or light. You can add your own processor logic by adding a new class and implementing the method:
+
+```
+InferenceResponse ProcessImage(Image image)
+```
+
+Once you've added the new class, you'll have to update the ScoreController so it instantiates your class and invokes the **ProcessImage** method on it to run your processing logic.
+
 ### Building, publishing and running the Docker container
 
 To build the image, use the Docker file named `Dockerfile`.
