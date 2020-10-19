@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>9b55c36c-1d12-4ac6-8ef1-d153ea96b64a</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -13,24 +15,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Protobuf Include="..\Protos\extension.proto" GrpcServices="Server">
-      <Link>Protos\extension.proto</Link>
-    </Protobuf>
-    <Protobuf Include="..\Protos\inferencing.proto" GrpcServices="Server">
-      <Link>Protos\inferencing.proto</Link>
-    </Protobuf>
-    <Protobuf Include="..\Protos\media.proto" GrpcServices="Server">
-      <Link>Protos\media.proto</Link>
-    </Protobuf>
+	<Protobuf Include="media.proto" GrpcServices="Server" />
+	<Protobuf Include="inferencing.proto" GrpcServices="Server" />
+	<Protobuf Include="extension.proto" GrpcServices="Server" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.27.0" />
-	<PackageReference Include="System.Drawing.Common" Version="4.7.0" />
+	  <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
-
+	<ItemGroup>
+	  <Folder Include="Services\" />
+	</ItemGroup>
 </Project>
