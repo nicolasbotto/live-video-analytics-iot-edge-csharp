@@ -7,14 +7,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace grpcExtension
 {
     public sealed class Program : IHostedService, IDisposable
     {
         private readonly IConfiguration _configuration;
-        private readonly Microsoft.Extensions.Logging.ILogger _logger;
+        private readonly ILogger _logger;
         private Server _grpcServer;
         private static async Task<int> Main(string[] args)
         {
@@ -24,6 +23,10 @@ namespace grpcExtension
                     .ConfigureAppConfiguration((hostingContext, config) => config.AddJsonFile("AppConfig.json"))
                     .ConfigureAppConfiguration((hostingContext, config) => config.AddCommandLine(args))
                     .ConfigureAppConfiguration((hostingContext, config) => config.AddEnvironmentVariables())
+                    .ConfigureLogging((hostingContext, logger) => {
+                        logger.ClearProviders();
+                        logger.AddConsole();
+                    })
                     .ConfigureServices((hostContext, services) => services.AddHostedService<Program>())
                     .RunConsoleAsync();
 
@@ -35,11 +38,11 @@ namespace grpcExtension
             }
         }
 
-        public Program(IConfiguration configuration)
+        public Program(IConfiguration configuration, ILogger<Program> logger)
         {
+            _logger = logger;
             _configuration = configuration;
         }
-
 
         public Task StartAsync(CancellationToken cancellationToken)
         {

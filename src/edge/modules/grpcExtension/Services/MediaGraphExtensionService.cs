@@ -25,6 +25,8 @@ namespace grpcExtension
 
         public async override Task ProcessMediaStream(IAsyncStreamReader<MediaStreamMessage> requestStream, IServerStreamWriter<MediaStreamMessage> responseStream, ServerCallContext context)
         {
+            // Auto increment counter. Increases per client requests
+            ulong responseSeqNum = 0;
             while (await requestStream.MoveNext())
             {
                 var requestMessage = requestStream.Current;
@@ -40,16 +42,9 @@ namespace grpcExtension
                         await responseStream.WriteAsync(responseMessage);
                         break;
                     case MediaStreamMessage.PayloadOneofCase.MediaSample:
-                        //_logger.LogInformation($"[Received] SequenceNum: {requestMessage.SequenceNumber}");
-
-                        // Auto increment counter. Increases per client requests
-                        ulong responseSeqNum = 1;
                         // Extract message IDs
                         var requestSeqNum = requestMessage.SequenceNumber;
-                        var requestAckSeqNum = requestMessage.AckSequenceNumber;
-
-//                        _logger.LogInformation($"[Received] SeqNum: {requestSeqNum} | AckNum: {requestAckSeqNum}\nMediaStreamDescriptor:\n{2}");
-                        //.format(requestSeqNum, requestAckSeqNum, clientState._mediaStreamDescriptor))
+                        _logger.LogInformation($"[Received] SequenceNum: {requestSeqNum}");
 
                         // Retrieve the sample content
                         ReadOnlyMemory<byte> content = null;
@@ -87,8 +82,8 @@ namespace grpcExtension
 
                         var mediaStreamMessageResponse = new MediaStreamMessage()
                         {
-                            SequenceNumber = responseSeqNum,
-                            AckSequenceNumber = requestAckSeqNum,
+                            SequenceNumber = ++responseSeqNum,
+                            AckSequenceNumber = requestSeqNum,
                             MediaSample = mediaSampleResponse
                         };
 
@@ -159,11 +154,11 @@ namespace grpcExtension
                     var memoryMappedFileProperties = mediaStreamDescriptor.SharedMemoryBufferTransferProperties;
 
                     // Create a view on the memory mapped file.
-                    //_logger.LogInformation(
-                        //1,
-                        //"Using shared memory transfer. Handle: {0}, Size:{1}",
-                        //memoryMappedFileProperties.HandleName,
-                        //memoryMappedFileProperties.LengthBytes);
+                    _logger.LogInformation(
+                        1,
+                        "Using shared memory transfer. Handle: {0}, Size:{1}",
+                        memoryMappedFileProperties.HandleName,
+                        memoryMappedFileProperties.LengthBytes);
 
                     _memoryMappedFileAccessor = new MemoryMappedFileAccessor(
                         memoryMappedFileProperties.HandleName,
@@ -174,21 +169,15 @@ namespace grpcExtension
                 case MediaStreamDescriptor.DataTransferPropertiesOneofCase.None:
 
                     // Nothing to be done.
-                    /*_logger.LogInformation(
+                    _logger.LogInformation(
                         1,
-                        "Using embedded frame transfer.");*/
+                        "Using embedded frame transfer.");
                     break;
 
                 default:
 
                     throw new RpcException(new Status(StatusCode.OutOfRange, $"Unsupported data transfer method: {mediaStreamDescriptor.DataTransferPropertiesCase}"));
             }
-
-            // Validate encoding
-            //if (!_modelHandler.IsMediaFormatSupported(mediaStreamDescriptor.MediaDescriptor, out var errorMessage))
-            //{
-            //    throw new RpcException(new Status(StatusCode.OutOfRange, errorMessage));
-            //}
 
             // Cache the client media descriptor for this stream
             _clientMediaDescriptor = mediaStreamDescriptor.MediaDescriptor;
