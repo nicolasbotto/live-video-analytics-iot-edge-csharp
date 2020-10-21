@@ -40,7 +40,7 @@ namespace grpcExtension.Processors
             double avgColor = totalColor / imageBytes.Length;
             string colorIntensity = avgColor < 127 ? "dark" : "light";
 
-            logger.LogInformation($"Average color = {avgColor}");
+           // logger.LogInformation($"Average color = {avgColor}");
 
             var response = new InferenceResponse
             {

@@ -17,7 +17,7 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-EXPOSE 5001
+#EXPOSE 5001
 
 # Required for using System.Drawing.Common
 RUN apt-get update -y && \

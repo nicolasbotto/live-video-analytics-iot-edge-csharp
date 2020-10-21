@@ -13,12 +13,12 @@ namespace grpcExtension
 {
     public class MediaGraphExtensionService : MediaGraphExtension.MediaGraphExtensionBase
     {
-        private readonly ILogger<MediaGraphExtensionService> _logger;
+        private readonly ILogger _logger;
         private MemoryMappedFileAccessor _memoryMappedFileAccessor;
         private MediaDescriptor _clientMediaDescriptor;
         private Memory<byte> _memory;
 
-        public MediaGraphExtensionService(ILogger<MediaGraphExtensionService> logger)
+        public MediaGraphExtensionService(ILogger logger)
         {
             _logger = logger;
         }
@@ -28,7 +28,7 @@ namespace grpcExtension
             while (await requestStream.MoveNext())
             {
                 var requestMessage = requestStream.Current;
-                switch(requestMessage.PayloadCase)
+                switch (requestMessage.PayloadCase)
                 {
                     case MediaStreamMessage.PayloadOneofCase.MediaStreamDescriptor:
                         var response = ProcessMediaStreamDescriptor(requestMessage.MediaStreamDescriptor);
@@ -40,7 +40,7 @@ namespace grpcExtension
                         await responseStream.WriteAsync(responseMessage);
                         break;
                     case MediaStreamMessage.PayloadOneofCase.MediaSample:
-                        _logger.LogInformation($"[Received] SequenceNum: {requestMessage.SequenceNumber}");
+                        //_logger.LogInformation($"[Received] SequenceNum: {requestMessage.SequenceNumber}");
 
                         // Auto increment counter. Increases per client requests
                         ulong responseSeqNum = 1;
@@ -48,7 +48,7 @@ namespace grpcExtension
                         var requestSeqNum = requestMessage.SequenceNumber;
                         var requestAckSeqNum = requestMessage.AckSequenceNumber;
 
-                        _logger.LogInformation($"[Received] SeqNum: {requestSeqNum} | AckNum: {requestAckSeqNum}\nMediaStreamDescriptor:\n{2}");
+//                        _logger.LogInformation($"[Received] SeqNum: {requestSeqNum} | AckNum: {requestAckSeqNum}\nMediaStreamDescriptor:\n{2}");
                         //.format(requestSeqNum, requestAckSeqNum, clientState._mediaStreamDescriptor))
 
                         // Retrieve the sample content
@@ -106,9 +106,10 @@ namespace grpcExtension
                 Subtype = x.SubType,
                 Classification = new Classification()
                 {
-                    Tag = new Tag() { 
-                        Value = x.Classification.Value, 
-                        Confidence = (float)x.Classification.Confidence 
+                    Tag = new Tag()
+                    {
+                        Value = x.Classification.Value,
+                        Confidence = (float)x.Classification.Confidence
                     }
                 }
             });
@@ -158,11 +159,11 @@ namespace grpcExtension
                     var memoryMappedFileProperties = mediaStreamDescriptor.SharedMemoryBufferTransferProperties;
 
                     // Create a view on the memory mapped file.
-                    _logger.LogInformation(
-                        1,
-                        "Using shared memory transfer. Handle: {0}, Size:{1}",
-                        memoryMappedFileProperties.HandleName,
-                        memoryMappedFileProperties.LengthBytes);
+                    //_logger.LogInformation(
+                        //1,
+                        //"Using shared memory transfer. Handle: {0}, Size:{1}",
+                        //memoryMappedFileProperties.HandleName,
+                        //memoryMappedFileProperties.LengthBytes);
 
                     _memoryMappedFileAccessor = new MemoryMappedFileAccessor(
                         memoryMappedFileProperties.HandleName,
@@ -173,9 +174,9 @@ namespace grpcExtension
                 case MediaStreamDescriptor.DataTransferPropertiesOneofCase.None:
 
                     // Nothing to be done.
-                    _logger.LogInformation(
+                    /*_logger.LogInformation(
                         1,
-                        "Using embedded frame transfer.");
+                        "Using embedded frame transfer.");*/
                     break;
 
                 default:
