@@ -1,3 +1,11 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+using Grpc.Core;
+using grpcExtension.Core;
+using grpcExtension.Models;
+using grpcExtension.Processors;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -5,11 +13,6 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Threading.Tasks;
-using Grpc.Core;
-using grpcExtension.Core;
-using grpcExtension.Models;
-using grpcExtension.Processors;
-using Microsoft.Extensions.Logging;
 
 namespace grpcExtension
 {

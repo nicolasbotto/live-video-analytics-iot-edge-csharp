@@ -1,14 +1,9 @@
-﻿// -----------------------------------------------------------------------
-//  <copyright company="Microsoft Corporation">
-//      Copyright (C) Microsoft Corporation. All rights reserved.
-//  </copyright>
-// -----------------------------------------------------------------------
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 using System;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace grpcExtension
 {
