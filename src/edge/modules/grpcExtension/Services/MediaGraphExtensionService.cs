@@ -2,19 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
+using grpcExtension.Core;
 using grpcExtension.Models;
 using grpcExtension.Processors;
 using Microsoft.Extensions.Logging;
 
 namespace grpcExtension
 {
-    public class MediaGraphExtensionService : MediaGraphExtension.MediaGraphExtensionBase
+    public class MediaGraphExtensionService : MediaGraphExtension.MediaGraphExtensionBase, IDisposable
     {
         private readonly ILogger _logger;
-        private MemoryMappedFileAccessor _memoryMappedFileAccessor;
+        private MemoryMappedFileMemoryManager<byte> _memoryManager;
         private MediaDescriptor _clientMediaDescriptor;
         private Memory<byte> _memory;
 
@@ -30,6 +32,7 @@ namespace grpcExtension
             while (await requestStream.MoveNext())
             {
                 var requestMessage = requestStream.Current;
+                _logger.LogInformation($"[Received] SequenceNum: {requestMessage.SequenceNumber}");
                 switch (requestMessage.PayloadCase)
                 {
                     case MediaStreamMessage.PayloadOneofCase.MediaStreamDescriptor:
@@ -44,7 +47,6 @@ namespace grpcExtension
                     case MediaStreamMessage.PayloadOneofCase.MediaSample:
                         // Extract message IDs
                         var requestSeqNum = requestMessage.SequenceNumber;
-                        _logger.LogInformation($"[Received] SequenceNum: {requestSeqNum}");
 
                         // Retrieve the sample content
                         ReadOnlyMemory<byte> content = null;
@@ -160,9 +162,24 @@ namespace grpcExtension
                         memoryMappedFileProperties.HandleName,
                         memoryMappedFileProperties.LengthBytes);
 
-                    _memoryMappedFileAccessor = new MemoryMappedFileAccessor(
+                    try 
+                    {
+                        _memoryManager = new MemoryMappedFileMemoryManager<byte>(
                         memoryMappedFileProperties.HandleName,
-                        (long)memoryMappedFileProperties.LengthBytes);
+                        (int)memoryMappedFileProperties.LengthBytes,
+                        desiredAccess: MemoryMappedFileAccess.Read);
+
+                        _memory = _memoryManager.Memory;
+                    }
+                    catch(Exception ex)
+                    {
+                        _logger.LogError($"Error creating memory manager: {ex.Message}");
+
+                        throw new RpcException(
+                            new Status(
+                                StatusCode.InvalidArgument,
+                                $"Error creating memory manager: {ex.Message}"));
+                    }
 
                     break;
 
@@ -184,6 +201,11 @@ namespace grpcExtension
 
             // Return a empty server stream descriptor as no samples are returned (only inferences)
             return new MediaStreamDescriptor { MediaDescriptor = new MediaDescriptor { Timescale = _clientMediaDescriptor.Timescale } };
+        }
+
+        public void Dispose()
+        {
+            ((IDisposable)_memoryManager)?.Dispose();
         }
     }
 }

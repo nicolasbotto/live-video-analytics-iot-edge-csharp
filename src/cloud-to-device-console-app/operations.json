@@ -24,7 +24,8 @@
         {
             "opName": "GraphTopologySet",
             "opParams": {
-                "topologyUrl": "https://raw.githubusercontent.com/Azure/live-video-analytics/master/MediaGraph/topologies/motion-detection/topology.json"
+                //"topologyUrl": "https://raw.githubusercontent.com/Azure/live-video-analytics/master/MediaGraph/topologies/motion-detection/topology.json"
+                "topologyFile": "grpc.json"
             }
         },
         {
