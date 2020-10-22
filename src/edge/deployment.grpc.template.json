@@ -84,7 +84,7 @@
                       "status": "running",
                       "restartPolicy": "always",
                       "settings": {
-                          "image": "$CONTAINER_REGISTRY_USERNAME_myacr.azurecr.io/grpcextension:logging",
+                          "image": "$CONTAINER_REGISTRY_USERNAME_myacr.azurecr.io/grpcextension:latest",
                           "createOptions": {
                             "ExposedPorts": {
                                 "80/tcp" : {},
