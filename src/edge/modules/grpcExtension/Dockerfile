@@ -21,4 +21,4 @@ COPY --from=publish /app/publish .
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends libgdiplus
 
-ENTRYPOINT ["dotnet", "grpcExtension.dll"]
+ENTRYPOINT ["dotnet", "GrpcExtension.dll"]

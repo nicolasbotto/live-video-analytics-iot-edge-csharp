@@ -1,21 +1,21 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-using grpcExtension.Models;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 
-namespace grpcExtension.Processors
+namespace GrpcExtension.Processors
 {
     /// <summary>Class <c>ImageProcessor</c> is responsible for processing an <paramref name="image"/>.
     /// </summary>
-    public class ImageProcessor
+    public class BatchImageProcessor
     {
         private readonly ILogger logger;
-        public ImageProcessor(ILogger logger)
+        public BatchImageProcessor(ILogger logger)
         {
             this.logger = logger;
         }
@@ -29,34 +29,39 @@ namespace grpcExtension.Processors
         /// instance of your class and invoke the ProcessImage method.
         /// </remarks>
         /// </summary>
-        public InferenceResponse ProcessImage(Image image)
+        public IEnumerable<Inference> ProcessImage(List<Image> images)
         {
-            var grayScaleImage = ToGrayScale(image);
+            var inferences = new List<Inference>();
 
-            byte[] imageBytes = GetBytes(grayScaleImage);
-
-            var totalColor = imageBytes.Sum(x => x);
-
-            double avgColor = totalColor / imageBytes.Length;
-            string colorIntensity = avgColor < 127 ? "dark" : "light";
-
-            logger.LogInformation($"Average color = {avgColor}");
-
-            var response = new InferenceResponse
+            foreach (var image in images)
             {
-                Inferences = new[] { new Models.Inference
-            {
-                Type = "classification",
-                SubType = "colorIntensity",
-                Classification = new Models.Classification()
+                var grayScaleImage = ToGrayScale(image);
+
+                byte[] imageBytes = GetBytes(grayScaleImage);
+
+                var totalColor = imageBytes.Sum(x => x);
+
+                double avgColor = totalColor / imageBytes.Length;
+                string colorIntensity = avgColor < 127 ? "dark" : "light";
+
+                inferences.Add(new Inference
                 {
-                    Confidence = 1.0,
-                    Value = colorIntensity
-                }
-            }}
-            };
+                    Type = Inference.Types.InferenceType.Classification,
+                    Subtype = "colorIntensity",
+                    Classification = new Classification()
+                    {
+                        Tag = new Tag()
+                        {
+                            Value = colorIntensity,
+                            Confidence = 1.0f
+                        }
+                    }
+                });
 
-            return response;
+                logger.LogInformation($"Average color = {avgColor}");
+            }
+
+            return inferences;
         }
 
         /// <summary>This method converts an image to grayscale

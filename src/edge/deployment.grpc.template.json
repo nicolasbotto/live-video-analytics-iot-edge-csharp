@@ -84,28 +84,9 @@
                       "status": "running",
                       "restartPolicy": "always",
                       "settings": {
-                          "image": "$CONTAINER_REGISTRY_USERNAME_myacr.azurecr.io/grpcextension:latest",
+                          "image": "$CONTAINER_REGISTRY_USERNAME_myacr.azurecr.io/grpcextension:batch",
                           "createOptions": {
-                            "ExposedPorts": {
-                                "80/tcp" : {},
-                                "5001/tcp" : {}
-                            },
-                            "Env":[
-                           
-                            ],
-                            "HostConfig": {
-                                "PortBindings": {
-                                    "80/tcp": [
-                                        {
-                                            "HostPort": "8080"
-                                        }
-                                    ],
-                                    "5001/tcp" : [
-                                        {
-                                            "HostPort" : "5001"
-                                        }
-                                    ]
-                                },
+                              "HostConfig": {
                                 "LogConfig": {
                                     "Type": "",
                                     "Config": {
@@ -114,7 +95,11 @@
                                     }
                                 },        
                                 "IpcMode": "container:lvaEdge"
-                            }
+                            },
+                            "Env":[
+                                "grpcBinding=tcp://0.0.0.0:5001",
+                                "batchSize=1"
+                            ]
                         }
                     }
                     },

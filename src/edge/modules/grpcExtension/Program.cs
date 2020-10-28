@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace grpcExtension
+namespace GrpcExtension
 {
     public sealed class Program : IHostedService, IDisposable
     {
@@ -50,6 +50,7 @@ namespace grpcExtension
         public Task StartAsync(CancellationToken cancellationToken)
         {
             var grpcBinding = _configuration["grpcBinding"];
+            var batchSize = string.IsNullOrWhiteSpace(_configuration["batchSize"]) ? 1 : int.Parse(_configuration["batchSize"]);
 
             if (string.IsNullOrWhiteSpace(grpcBinding))
             {
@@ -65,12 +66,13 @@ namespace grpcExtension
             var grpcPort = grpcUrl.Port;
             var grpcHost = grpcUrl.Host;
 
-            var moduleExtension = new MediaGraphExtensionService(_logger);
+            var moduleExtension = new MediaGraphExtensionService(_logger, batchSize);
             _grpcServer = new Server(new[]
             {
                 // Allow for large message transfers (hi-resolution images can go beyond 4MB default gRPC limit)
                 new ChannelOption(ChannelOptions.MaxReceiveMessageLength, int.MaxValue),
                 new ChannelOption(ChannelOptions.MaxSendMessageLength, int.MaxValue),
+                new ChannelOption(ChannelOptions.MaxConcurrentStreams, 1)
             })
             {
                 Services = { MediaGraphExtension.BindService(moduleExtension) },

@@ -4,7 +4,7 @@
 using System;
 using System.IO.MemoryMappedFiles;
 
-namespace grpcExtension
+namespace GrpcExtension
 {
     internal static class MemoryMappedFileExtensions
     {

@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 
-namespace grpcExtension
+namespace GrpcExtension
 {
     /// <summary>
     /// Allows for random access reads and writes on a memory mapped file.

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
 using System;
@@ -6,7 +6,7 @@ using System.Buffers;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 
-namespace grpcExtension.Core
+namespace GrpcExtension.Core
 {
     /// <summary>
     /// Allows for random access reads and writes on a memory mapped file.

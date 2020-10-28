@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------
 
 syntax = "proto3";
-option csharp_namespace = "grpcExtension";
+option csharp_namespace = "GrpcExtension";
 package microsoft.azure.media.live_video_analytics.extensibility.grpc.v1;
 
 //
