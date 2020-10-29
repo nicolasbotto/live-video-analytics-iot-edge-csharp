@@ -18,14 +18,16 @@ namespace GrpcExtension
     {
         private readonly ILogger _logger;
         private readonly int _batchSize;
+        private readonly BatchImageProcessor _imageProcessor;
         private MemoryMappedFileMemoryManager<byte> _memoryManager;
         private MediaDescriptor _clientMediaDescriptor;
         private Memory<byte> _memory;
-        
+
         public MediaGraphExtensionService(ILogger logger, int batchSize)
         {
             _logger = logger;
             _batchSize = batchSize;
+            _imageProcessor = new BatchImageProcessor(_logger);
         }
 
         public async override Task ProcessMediaStream(IAsyncStreamReader<MediaStreamMessage> requestStream, IServerStreamWriter<MediaStreamMessage> responseStream, ServerCallContext context)
@@ -48,79 +50,66 @@ namespace GrpcExtension
             List<Image> imageBatch = new List<Image>();
             while (await requestStream.MoveNext())
             {
-                try
+                // Extract message IDs
+                requestMessage = requestStream.Current;
+                var requestSeqNum = requestMessage.SequenceNumber;
+                _logger.LogInformation($"[Received MediaSample] SequenceNum: {requestSeqNum}");
+
+                // Retrieve the sample content
+                ReadOnlyMemory<byte> content = null;
+                var inputSample = requestMessage.MediaSample;
+
+                switch (inputSample.ContentCase)
                 {
-                    // Extract message IDs
-                    requestMessage = requestStream.Current;
-                    var requestSeqNum = requestMessage.SequenceNumber;
-                    _logger.LogInformation($"[Received MediaSample] SequenceNum: {requestSeqNum}");
+                    case MediaSample.ContentOneofCase.ContentReference:
 
-                    // Retrieve the sample content
-                    ReadOnlyMemory<byte> content = null;
-                    var inputSample = requestMessage.MediaSample;
+                        content = _memory.Slice(
+                            (int)inputSample.ContentReference.AddressOffset,
+                            (int)inputSample.ContentReference.LengthBytes);
 
-                    switch (inputSample.ContentCase)
-                    {
-                        case MediaSample.ContentOneofCase.ContentReference:
+                        break;
 
-                            content = _memory.Slice(
-                                (int)inputSample.ContentReference.AddressOffset,
-                                (int)inputSample.ContentReference.LengthBytes);
+                    case MediaSample.ContentOneofCase.ContentBytes:
+                        content = inputSample.ContentBytes.Bytes.ToByteArray();
+                        break;
+                }
 
-                            break;
+                _logger.LogInformation($"Message content read");
+                var mediaSampleResponse = new MediaSample();
+                var mediaStreamMessageResponse = new MediaStreamMessage()
+                {
+                    SequenceNumber = ++responseSeqNum,
+                    AckSequenceNumber = requestSeqNum
+                };
 
-                        case MediaSample.ContentOneofCase.ContentBytes:
-                            content = inputSample.ContentBytes.Bytes.ToByteArray();
-                            break;
-                    }
+                imageBatch.Add(await GetImageFromContent(content));
 
-                    var mediaSampleResponse = new MediaSample();
-                    var mediaStreamMessageResponse = new MediaStreamMessage()
-                    {
-                        SequenceNumber = ++responseSeqNum,
-                        AckSequenceNumber = requestSeqNum
-                    };
-
-                    imageBatch.Add(await GetImageFromContent(content));
-
-                    // If batch size hasn't been reached, return dummy response
-                    if (messageCount < _batchSize)
-                    {
-                        // Return acknoledge message
-                        // mediaSampleResponse.Inferences.Add(new Inference()
-                        // {
-                        //     Text = new Text()
-                        //     {
-                        //         Value = $"Adding message: {messageCount} of {_batchSize}"
-                        //     }
-                        // });
-
-                        mediaStreamMessageResponse.MediaSample = mediaSampleResponse;
-                        await responseStream.WriteAsync(mediaStreamMessageResponse);
-                        messageCount++;
-                        continue;
-                    }
-
-                    foreach (var inference in inputSample.Inferences)
-                    {
-                        NormalizeInference(inference);
-                    }
-
-                    // Process image
-                    var imageProcessor = new BatchImageProcessor(_logger);
-                    var inferencesResponse = imageProcessor.ProcessImage(imageBatch);
-
-                    mediaSampleResponse.Inferences.AddRange(inferencesResponse);
+                // If batch size hasn't been reached, return dummy response
+                if (messageCount < _batchSize)
+                {
+                    // Return acknowledge message
                     mediaStreamMessageResponse.MediaSample = mediaSampleResponse;
-
                     await responseStream.WriteAsync(mediaStreamMessageResponse);
-                    imageBatch.Clear();
-                    messageCount = 1;
+                    messageCount++;
+                    continue;
                 }
-                catch (Exception ex)
+
+                foreach (var inference in inputSample.Inferences)
                 {
-                    _logger.LogInformation($"Error processing MediaSample message: {ex.Message}.");
+                    NormalizeInference(inference);
                 }
+
+                // Process image
+                _logger.LogInformation($"Call process image");
+                var inferencesResponse = _imageProcessor.ProcessImage(imageBatch);
+
+                mediaSampleResponse.Inferences.AddRange(inferencesResponse);
+                mediaStreamMessageResponse.MediaSample = mediaSampleResponse;
+
+                _logger.LogInformation($"Send response");
+                await responseStream.WriteAsync(mediaStreamMessageResponse);
+                imageBatch.Clear();
+                messageCount = 1;
             }
         }
 
@@ -204,7 +193,15 @@ namespace GrpcExtension
                     break;
 
                 default:
+                    _logger.LogInformation($"Unsupported data transfer method: {mediaStreamDescriptor.DataTransferPropertiesCase}");
                     throw new RpcException(new Status(StatusCode.OutOfRange, $"Unsupported data transfer method: {mediaStreamDescriptor.DataTransferPropertiesCase}"));
+            }
+
+            // Validate encoding
+            if (!_imageProcessor.IsMediaFormatSupported(mediaStreamDescriptor.MediaDescriptor, out var errorMessage))
+            {
+                _logger.LogInformation($"validate enconding: {errorMessage}");
+                throw new RpcException(new Status(StatusCode.OutOfRange, errorMessage));
             }
 
             // Cache the client media descriptor for this stream

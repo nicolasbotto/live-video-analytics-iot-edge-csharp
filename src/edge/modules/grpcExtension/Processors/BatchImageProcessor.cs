@@ -3,6 +3,7 @@
 
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -14,10 +15,10 @@ namespace GrpcExtension.Processors
     /// </summary>
     public class BatchImageProcessor
     {
-        private readonly ILogger logger;
+        private readonly ILogger _logger;
         public BatchImageProcessor(ILogger logger)
         {
-            this.logger = logger;
+            _logger = logger;
         }
 
         /// <summary>This method converts an image to grayscale and determines if its color intensity is dark or light
@@ -32,7 +33,6 @@ namespace GrpcExtension.Processors
         public IEnumerable<Inference> ProcessImage(List<Image> images)
         {
             var inferences = new List<Inference>();
-
             foreach (var image in images)
             {
                 var grayScaleImage = ToGrayScale(image);
@@ -58,11 +58,48 @@ namespace GrpcExtension.Processors
                     }
                 });
 
-                logger.LogInformation($"Average color = {avgColor}");
+                _logger.LogInformation($"Average color = {avgColor}");
             }
 
             return inferences;
         }
+
+        /// <summary>
+        /// Validate Media Format
+        /// </summary>
+        /// <param name="mediaDescriptor">The Media session preamble</param>
+        /// <param name="errorMessage">Error message</param>
+        /// <returns></returns>
+        public bool IsMediaFormatSupported(MediaDescriptor mediaDescriptor, out string errorMessage)
+        {
+            errorMessage = null;
+            switch (mediaDescriptor.MediaSampleFormatCase)
+            {
+                case MediaDescriptor.MediaSampleFormatOneofCase.VideoFrameSampleFormat:
+
+                    var videoSampleFormat = mediaDescriptor.VideoFrameSampleFormat;
+
+                     if (videoSampleFormat.Encoding != VideoFrameSampleFormat.Types.Encoding.Jpg)
+                    {
+                        errorMessage = $"{videoSampleFormat.Encoding} encoding is not supported. Supported: Jpg";
+                        return false;
+                    }
+
+                    if (videoSampleFormat.PixelFormat != VideoFrameSampleFormat.Types.PixelFormat.None)
+                    {
+                        errorMessage = $"{videoSampleFormat.PixelFormat} pixel format is not supported. Supported: None";
+                        return false;
+                    }
+
+                    return true;
+
+                default:
+
+                    errorMessage = $"Unsupported sample format: {mediaDescriptor.MediaSampleFormatCase}";
+                    return false;
+            }
+        }
+
 
         /// <summary>This method converts an image to grayscale
         /// <param name="image">The <paramref name="image"/>.</param>

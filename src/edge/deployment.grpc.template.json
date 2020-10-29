@@ -84,7 +84,7 @@
                       "status": "running",
                       "restartPolicy": "always",
                       "settings": {
-                          "image": "$CONTAINER_REGISTRY_USERNAME_myacr.azurecr.io/grpcextension:batch",
+                          "image": "$CONTAINER_REGISTRY_USERNAME_myacr.azurecr.io/grpcextension:latest",
                           "createOptions": {
                               "HostConfig": {
                                 "LogConfig": {

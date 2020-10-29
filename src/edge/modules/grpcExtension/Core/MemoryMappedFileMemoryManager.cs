@@ -59,7 +59,7 @@ namespace GrpcExtension.Core
             _accessor = _file.CreateViewAccessor(0, size, desiredAccess);
         }
 
-        /// <inheritdoc />
+        /// Free resources
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -69,7 +69,10 @@ namespace GrpcExtension.Core
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Returns a memory span that wraps the underlying memory buffer.
+        /// </summary>
+        /// <returns></returns>
         public unsafe override Span<T> GetSpan()
         {
             var viewHandle = _accessor.SafeMemoryMappedViewHandle;
@@ -78,7 +81,11 @@ namespace GrpcExtension.Core
             return new Span<T>((void*)viewPointer, _length);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Returns a handle to the memory that has been pinned and whose address can be taken.
+        /// </summary>
+        /// <param name="elementIndex">The offset to the element in the memory buffer at which the returned MemoryHandle points.</param>
+        /// <returns></returns>
         public unsafe override MemoryHandle Pin(int elementIndex = 0)
         {
             var viewHandle = _accessor.SafeMemoryMappedViewHandle;
@@ -87,7 +94,9 @@ namespace GrpcExtension.Core
             return new MemoryHandle((void*)viewPointer);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// No-op
+        /// </summary>
         public override void Unpin()
         {
         }

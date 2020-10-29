@@ -12,6 +12,37 @@ This gPRC extension module is a .NET Core console application built to host a gR
 The frames can be transferred through shared memory or they can be embedded in the message. The date transfer mode can be configured in the Media Graph topology to determine how frames will be transferred.
 The gRPC server supports batching frames, this is configured using the *batchSize* parameter.
 
+*Program.cs*: this is the entry point of the application. It is responsible for the configuring and management of the gRPC server.
+
+
+```
+Task StartAsync(CancellationToken cancellationToken)
+```
+In this method we:
+1. Create an instance of gRPC server.
+2. Create an instance of the service implementation class **MediaGraphExtensionService**.
+3. Register MediaGraphExtensionService service implementation by adding its service definition to the Services collection.
+4. Set the address and port the gRPC server will listen on for client requests.
+5. Start the gRPC server.
+
+*Services\MediaGraphExtensionService.cs*: this class is responsible for handling the protopuf messages communication with the LVA client. 
+
+```
+async override Task ProcessMediaStream(IAsyncStreamReader<MediaStreamMessage> requestStream, IServerStreamWriter<MediaStreamMessage> responseStream, ServerCallContext context)
+```
+The client sends a media stream descriptor followed by video frames a protobuf message over the gRPC stream session. 
+
+In this method we:
+1. Read and validate the MediaStreamDescriptor (it is the first message sent by the client). The sample processor we're using only supports JPG encoding and None as pixel format. In case your custom processor supports a different encoding and/or format, update the **IsMediaFormatSupported** of the processor class.
+2. If the media stream descriptor is valid, the gRPC reads and analyses the sequence of media samples containing the video frame, and returns inference results as a protobuf message.
+
+*Processors\BatchImageProcessor.cs*: this class is responsible for processing the image. In a nutshell, it converts an image to grayscale and determines if its color intensity is dark or light. You can add your own processor logic by adding a new class and implementing the method:
+
+```
+IEnumerable<Inference> ProcessImage(List<Image> images)
+```
+Once you've added the new class, you'll have to update the ScoreController so it instantiates your class and invokes the **ProcessImage** method on it to run your processing logic.
+
 ### Building, publishing and running the Docker container
 
 To build the image, use the Docker file named `Dockerfile`.
