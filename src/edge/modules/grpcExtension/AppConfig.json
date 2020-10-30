@@ -1,4 +1,4 @@
 {
-  "grpcBinding": "tcp://0.0.0.0:5002",
+  "grpcBinding": "tcp://0.0.0.0:5001",
   "batchSize":  1
 }

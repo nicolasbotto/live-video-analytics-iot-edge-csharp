@@ -86,7 +86,7 @@ The topology (i.e. https://github.com/Azure/live-video-analytics/blob/master/Med
         "name": "grpcExtensionAddress",
         "type": "String",
         "description": "grpc LVA Extension Address",
-        "default": "tcp://lvaextension:44000"
+        "default": "tcp://lvaextension:5001"
       },
 ```
 * Configuration
