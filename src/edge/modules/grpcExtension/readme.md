@@ -79,7 +79,7 @@ Let's decompose it a bit:
 * `--batchSize`: the size of the batch
 
 ### Updating references into Topologies, to target the gRPC Extension Address
-The topology (i.e. https://github.com/Azure/live-video-analytics/blob/master/MediaGraph/topologies/grpcExtension/topology.json) must define an gRPC Extension Address:
+The [gRPCExtension topology](https://github.com/Azure/live-video-analytics/blob/master/MediaGraph/topologies/grpcExtension/topology.json) must define an gRPC Extension Address:
 
 * gRPC Extension Address Parameter
 ```
@@ -185,7 +185,7 @@ Follow instructions in [Push and Pull Docker images  - Azure Container Registry]
 Follow instruction in [Deploy module from Azure portal](https://docs.microsoft.com/en-us/azure/iot-edge/how-to-deploy-modules-portal) to deploy the container image as an IoT Edge module (use the IoT Edge module option).
 
 ## gRPC server response
-Once the setup is complete and you instantiate a graph using [our VSCode quickstart](https://docs.microsoft.com/en-us/azure/media-services/live-video-analytics-edge/analyze-live-video-use-your-grpc-model-quickstart?pivots=programming-language-csharp) or via Azure Portal, you will see JSON printed on your screen that looks something like this
+Once the setup is complete and you instantiate the [gRPCExtension topology](https://github.com/Azure/live-video-analytics/blob/master/MediaGraph/topologies/grpcExtension/topology.json) using [our VSCode quickstart](https://docs.microsoft.com/en-us/azure/media-services/live-video-analytics-edge/analyze-live-video-use-your-grpc-model-quickstart?pivots=programming-language-csharp) or via Azure Portal, you will see JSON printed on your screen that looks something like this
 
 ```JSON
 {
