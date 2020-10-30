@@ -1,14 +1,15 @@
-# gRPC Extension module
+# gRPC Server
 
-The gRPC extension module enables your own IoT Edge module to accept video frames as [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) messages and return results back to LVA using the inference metadata schema defined by LVA.
+This gRPC server enables your own IoT Edge module to accept video frames as [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) messages and return results back to LVA using the [inference metadata schema](https://docs.microsoft.com/en-us/azure/media-services/live-video-analytics-edge/inference-metadata-schema) defined by LVA.
 
 ## Prerequisites
 
-1. [Install Docker](http://docs.docker.com/docker-for-windows/install/) on your machine
+1. [Install Docker](https://docs.docker.com/desktop/#download-and-install) on your machine
+1. [Install IoT Edge Runtime](https://docs.microsoft.com/en-us/azure/iot-edge/how-to-install-iot-edge?tabs=linux)
 
 ### Design
 
-This gPRC extension module is a .NET Core console application built to host a gRPC server to handle the [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) messages sent between LVA and your custom AI. LVA sends a media stream descriptor which defines what information will be sent followed by video frames to the server as a [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) message over the gRPC stream session. The server validates the stream descriptor, analyses the video frame, processes it using an Image Processor, and returns inference results as a [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) message. 
+This gPRC server is a .NET Core console application that will house your custom AI and is built to handle the [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) messages sent between LVA and your custom AI. LVA sends a media stream descriptor which defines what information will be sent followed by video frames to the server as a [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) message over the gRPC stream session. The server validates the stream descriptor, analyses the video frame, processes it using an Image Processor, and returns inference results as a [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) message. 
 The frames can be transferred through shared memory or they can be embedded in the message. The date transfer mode can be configured in the Media Graph topology to determine how frames will be transferred.
 The gRPC server supports batching frames, this is configured using the *batchSize* parameter.
 
@@ -23,7 +24,7 @@ In this method we:
 2. Create an instance of the service implementation class **MediaGraphExtensionService**.
 3. Register MediaGraphExtensionService service implementation by adding its service definition to the Services collection.
 4. Set the address and port the gRPC server will listen on for client requests.
-5. Start the gRPC server.
+5. Initialize the gRPC server.
 
 *Services\MediaGraphExtensionService.cs*: this class is responsible for handling the  [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) messages communication with the LVA client. 
 
@@ -34,7 +35,7 @@ The client sends a media stream descriptor followed by video frames to the serve
 
 In this method we:
 1. Read and validate the MediaStreamDescriptor (it is the first message sent by the client). The sample processor we're using only supports JPG encoding and None as pixel format. In case your custom processor supports a different encoding and/or format, update the **IsMediaFormatSupported** method of the processor class.
-2. If the media stream descriptor is valid, the gRPC reads and analyses the sequence of media samples containing the video frame, and returns inference results as a protobuf message.
+2. If the media stream descriptor is valid, the gRPC reads and analyzes the sequence of media samples containing the video frame, and returns inference results as a protobuf message.
 
 *Processors\BatchImageProcessor.cs*: this class is responsible for processing the image. In a nutshell, it converts an image to grayscale and determines if its color intensity is dark or light. You can add your own processor logic by adding a new class and implementing the method:
 
@@ -51,7 +52,7 @@ First, a couple assumptions
 
 * We'll be using Azure Container Registry (ACR) to publish our image before distributing it
 * Our local Docker container image is already loged into ACR.
-* Our hypothetical ACR name is "myregistry". Your name may defer, so please update it properly in the following commands.
+* In this sample, our ACR name is "myregistry". Your name may defer, so please update it properly in the following commands.
 
 > If you're unfamiliar with ACR or have any questions, please follow this [demo on building and pushing an image into ACR](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli).
 
@@ -127,7 +128,7 @@ The topology (i.e. https://github.com/Azure/live-video-analytics/blob/master/Med
 }
 ```
 
-The frames can be transferred through shared memory or they can be embedded in the message. The date transfer mode can be configured in the Media Graph topology to determine how frames will be transferred. This is achieved by configuring the dataTransfer element of the MediaGraphGrpcExtension as shown below:
+The frames can be transferred through shared memory or they can be embedded in the message. The data transfer mode can be configured in the Media Graph topology to determine how frames will be transferred. This is achieved by configuring the dataTransfer element of the MediaGraphGrpcExtension as shown below:
 
 Embedded:
 ```JSON
@@ -175,29 +176,16 @@ gRPC extension module:
 }
 ```
 
-First, a couple assumptions
+## Upload Docker image to Azure container registry
 
-* We'll be using Azure Container Registry (ACR) to publish our image before distributing it
-* Our local Docker is already loged into ACR.
-* Our hypothetical ACR name is "myregistry". Your may defer, so please update it properly along the following commands.
+Follow instructions in [Push and Pull Docker images  - Azure Container Registry](http://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli) to save your image for later use on another machine.
 
-> If you're unfamiliar with ACR or have any questions, please follow this [demo on building and pushing an image into ACR](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli).
+## Deploy as an Azure IoT Edge module
 
-`cd` onto the repo's root directory
-```
-sudo docker run -d -p 5001:5001 --name grpcextension myregistry.azurecr.io/grpcextension:1 --grpcBinding tcp://0.0.0.0:5001 --batchSize 1
+Follow instruction in [Deploy module from Azure portal](https://docs.microsoft.com/en-us/azure/iot-edge/how-to-deploy-modules-portal) to deploy the container image as an IoT Edge module (use the IoT Edge module option).
 
-sudo docker tag grpcextension:latest myregistry.azurecr.io/grpcextension:1
-
-sudo docker push myregistry.azurecr.io/grpcextension:1
-```
-
-Then, from the box where the container should execute, run this command:
-
-`sudo docker run -d -p 5001:5001 --name grpc myregistry.azurecr.io/grpcextension:1 --grpcBinding tcp://0.0.0.0:5001 --batchSize 1`
-
-## gRPC extension container response
-If successful, you will see JSON printed on your screen that looks something like this
+## gRPC server response
+Once the setup is complete and you instantiate a graph using [our VSCode quickstart](https://docs.microsoft.com/en-us/azure/media-services/live-video-analytics-edge/analyze-live-video-use-your-grpc-model-quickstart?pivots=programming-language-csharp) or via Azure Portal, you will see JSON printed on your screen that looks something like this
 
 ```JSON
 {
@@ -221,18 +209,10 @@ If successful, you will see JSON printed on your screen that looks something lik
   ]
 }
 ```
-
+## Terminate the gRPC extension
 Terminate the container using the following Docker commands
 
 ```bash
   docker stop grpcextension
   docker rm grpcextension
 ```
-
-## Upload Docker image to Azure container registry
-
-Follow instructions in [Push and Pull Docker images  - Azure Container Registry](http://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli) to save your image for later use on another machine.
-
-## Deploy as an Azure IoT Edge module
-
-Follow instruction in [Deploy module from Azure portal](https://docs.microsoft.com/en-us/azure/iot-edge/how-to-deploy-modules-portal) to deploy the container image as an IoT Edge module (use the IoT Edge module option).
