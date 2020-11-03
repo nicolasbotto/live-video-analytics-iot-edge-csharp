@@ -6,8 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using Rect = System.Drawing.Rectangle;
 
 namespace GrpcExtension.Processors
 {
@@ -15,10 +16,10 @@ namespace GrpcExtension.Processors
     /// </summary>
     public class BatchImageProcessor
     {
-        private readonly ILogger _logger;
+        private readonly ILogger logger;
         public BatchImageProcessor(ILogger logger)
         {
-            _logger = logger;
+            this.logger = logger;
         }
 
         /// <summary>This method converts an image to grayscale and determines if its color intensity is dark or light
@@ -60,14 +61,14 @@ namespace GrpcExtension.Processors
                         }
                     });
 
-                    _logger.LogInformation($"Average color = {avgColor}");
+                    logger.LogInformation($"Average color = {avgColor}");
                 }
 
                 //return inferences;
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Error in processor: {ex.Message}.");
+                logger.LogInformation($"Error in processor: {ex.Message}.");
             }
 
             return inferences;
@@ -82,6 +83,7 @@ namespace GrpcExtension.Processors
         public bool IsMediaFormatSupported(MediaDescriptor mediaDescriptor, out string errorMessage)
         {
             errorMessage = null;
+            logger.LogInformation($"IsMediaFormatSupported {mediaDescriptor.MediaSampleFormatCase}:{mediaDescriptor.VideoFrameSampleFormat.Encoding}:{mediaDescriptor.VideoFrameSampleFormat.PixelFormat}.");
             switch (mediaDescriptor.MediaSampleFormatCase)
             {
                 case MediaDescriptor.MediaSampleFormatOneofCase.VideoFrameSampleFormat:
@@ -150,9 +152,19 @@ namespace GrpcExtension.Processors
         /// </summary>
         private byte[] GetBytes(Bitmap image)
         {
-            MemoryStream stream = new MemoryStream();
-            image.Save(stream, ImageFormat.Jpeg);
-            return stream.ToArray();
+            var region = new Rect(0, 0, image.Width, image.Height);
+            var bitmapData = image.LockBits(region, ImageLockMode.ReadOnly, image.PixelFormat);
+
+            var ptr = bitmapData.Scan0;
+            var length = Math.Abs(bitmapData.Stride) * image.Height;
+
+            var rgbValues = new byte[length];
+
+            Marshal.Copy(ptr, rgbValues, 0, length);
+
+            image.UnlockBits(bitmapData);
+
+            return rgbValues;
         }
     }
 }

@@ -49,11 +49,14 @@ namespace GrpcExtension.Core
                 mapName = Path.Combine(LinuxSharedMemoryDirectory, mapName);
                 _file = MemoryMappedFile.CreateFromFile(mapName, createIfNew ? FileMode.OpenOrCreate : FileMode.Open, null, size);
             }
-            else
+            else if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
                 _file = createIfNew
                     ? MemoryMappedFile.CreateOrOpen(mapName, size, desiredAccess)
                     : MemoryMappedFile.OpenExisting(mapName, desiredAccess.ToMemoryMappedFileRights());
+            } else
+            {
+                throw new Exception($"The platform {Environment.OSVersion.Platform} is not supported.");
             }
 
             _accessor = _file.CreateViewAccessor(0, size, desiredAccess);
