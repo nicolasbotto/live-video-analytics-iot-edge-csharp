@@ -138,16 +138,4 @@ COPY --from=publish /app/publish .
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends libgdiplus
 
-# Debug
-RUN apt-get update \
- && apt-get install -y --no-install-recommends unzip procps \
- && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
-
-RUN cp /opencvsharp/make/OpenCvSharpExtern/libOpenCvSharpExtern.so /usr/local/lib
-RUN cp /opencvsharp/make/OpenCvSharpExtern/libOpenCvSharpExtern.so .
-RUN cd /usr/lib
-RUN ln -s libgdiplus.so gdiplus.dll
-
-RUN export LD_LIBRARY_PATH="/lib:/usr/lib:/usr/local/lib"
-
 ENTRYPOINT ["dotnet", "GrpcExtension.dll"]
