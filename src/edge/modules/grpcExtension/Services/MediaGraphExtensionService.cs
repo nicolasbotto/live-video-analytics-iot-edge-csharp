@@ -83,7 +83,7 @@ namespace GrpcExtension
 
                 imageBatch.Add(GetImageFromContent(content));
 
-                // If batch size hasn't been reached, return dummy response
+                // If batch size hasn't been reached
                 if (messageCount < _batchSize)
                 {
                     // Return acknowledge message
