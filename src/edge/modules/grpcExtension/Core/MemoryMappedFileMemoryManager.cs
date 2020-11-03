@@ -22,7 +22,7 @@ namespace GrpcExtension.Core
         private readonly MemoryMappedViewAccessor _accessor;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MemoryMappedFileAccessor"/> class.
+        /// Initializes a new instance of the <see cref="MemoryMappedFileMemoryManager"/> class.
         /// </summary>
         /// <param name="mapName">Memory map name of path.</param>
         /// <param name="length">Length of the map determined in number of items.</param>
