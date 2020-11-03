@@ -12,7 +12,7 @@ using Rect = System.Drawing.Rectangle;
 
 namespace GrpcExtension.Processors
 {
-    /// <summary>Class <c>ImageProcessor</c> is responsible for processing an <paramref name="image"/>.
+    /// <summary>Class <c>BatchImageProcessor</c> is responsible for processing an Image/>.
     /// </summary>
     public class BatchImageProcessor
     {
