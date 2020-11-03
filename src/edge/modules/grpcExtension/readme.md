@@ -78,6 +78,8 @@ Let's decompose it a bit:
 * `--grpcBinding`: the port the gRPC server will listen on
 * `--batchSize`: the size of the batch
 
+The gRPC listens on the configured port allowing clients to craete a channel to the port.
+
 ### Updating references into Topologies, to target the gRPC Extension Address
 The [gRPCExtension topology](https://github.com/Azure/live-video-analytics/blob/master/MediaGraph/topologies/grpcExtension/topology.json) must define an gRPC Extension Address:
 
