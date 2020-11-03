@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -30,35 +30,44 @@ namespace GrpcExtension.Processors
         /// instance of your class and invoke the ProcessImage method.
         /// </remarks>
         /// </summary>
-        public IEnumerable<Inference> ProcessImage(List<Image> images)
+        public IEnumerable<Inference> ProcessImages(List<Image> images)
         {
             var inferences = new List<Inference>();
-            foreach (var image in images)
+            try
             {
-                var grayScaleImage = ToGrayScale(image);
-
-                byte[] imageBytes = GetBytes(grayScaleImage);
-
-                var totalColor = imageBytes.Sum(x => x);
-
-                double avgColor = totalColor / imageBytes.Length;
-                string colorIntensity = avgColor < 127 ? "dark" : "light";
-
-                inferences.Add(new Inference
+                foreach (var image in images)
                 {
-                    Type = Inference.Types.InferenceType.Classification,
-                    Subtype = "colorIntensity",
-                    Classification = new Classification()
-                    {
-                        Tag = new Tag()
-                        {
-                            Value = colorIntensity,
-                            Confidence = 1.0f
-                        }
-                    }
-                });
+                    var grayScaleImage = ToGrayScale(image);
 
-                _logger.LogInformation($"Average color = {avgColor}");
+                    byte[] imageBytes = GetBytes(grayScaleImage);
+
+                    var totalColor = imageBytes.Sum(x => x);
+
+                    double avgColor = totalColor / imageBytes.Length;
+                    string colorIntensity = avgColor < 127 ? "dark" : "light";
+
+                    inferences.Add(new Inference
+                    {
+                        Type = Inference.Types.InferenceType.Classification,
+                        Subtype = "colorIntensity",
+                        Classification = new Classification()
+                        {
+                            Tag = new Tag()
+                            {
+                                Value = colorIntensity,
+                                Confidence = 1.0f
+                            }
+                        }
+                    });
+
+                    _logger.LogInformation($"Average color = {avgColor}");
+                }
+
+                //return inferences;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation($"Error in processor: {ex.Message}.");
             }
 
             return inferences;
@@ -79,7 +88,7 @@ namespace GrpcExtension.Processors
 
                     var videoSampleFormat = mediaDescriptor.VideoFrameSampleFormat;
 
-                     if (videoSampleFormat.Encoding != VideoFrameSampleFormat.Types.Encoding.Jpg)
+                    if (videoSampleFormat.Encoding != VideoFrameSampleFormat.Types.Encoding.Jpg)
                     {
                         errorMessage = $"{videoSampleFormat.Encoding} encoding is not supported. Supported: Jpg";
                         return false;

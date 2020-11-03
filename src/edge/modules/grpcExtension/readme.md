@@ -40,9 +40,9 @@ In this method we:
 *Processors\BatchImageProcessor.cs*: this class is responsible for processing the image. In a nutshell, it converts an image to grayscale and determines if its color intensity is dark or light. You can add your own processor logic by adding a new class and implementing the method:
 
 ```
-IEnumerable<Inference> ProcessImage(List<Image> images)
+IEnumerable<Inference> ProcessImages(List<Image> images)
 ```
-Once you've added the new class, you'll have to update the MediaGraphExtensionService so it instantiates your class and invokes the **ProcessImage** method on it to run your processing logic.
+Once you've added the new class, you'll have to update the MediaGraphExtensionService so it instantiates your class and invokes the **ProcessImages** method on it to run your processing logic.
 
 ### Building, publishing and running the Docker container
 

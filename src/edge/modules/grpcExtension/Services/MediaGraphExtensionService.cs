@@ -37,11 +37,12 @@ namespace GrpcExtension
             var requestMessage = requestStream.Current;
             _logger.LogInformation($"[Received MediaStreamDescriptor] SequenceNum: {requestMessage.SequenceNumber}");
             var response = ProcessMediaStreamDescriptor(requestMessage.MediaStreamDescriptor);
+            
             var responseMessage = new MediaStreamMessage()
             {
                 MediaStreamDescriptor = response
             };
-
+            
             await responseStream.WriteAsync(responseMessage);
 
             // Process rest of the MediaStream message sequence
@@ -74,21 +75,19 @@ namespace GrpcExtension
                         break;
                 }
 
-                _logger.LogInformation($"Message content read");
-                var mediaSampleResponse = new MediaSample();
                 var mediaStreamMessageResponse = new MediaStreamMessage()
                 {
                     SequenceNumber = ++responseSeqNum,
                     AckSequenceNumber = requestSeqNum
                 };
 
-                imageBatch.Add(await GetImageFromContent(content));
+                imageBatch.Add(GetImageFromContent(content));
 
                 // If batch size hasn't been reached, return dummy response
                 if (messageCount < _batchSize)
                 {
                     // Return acknowledge message
-                    mediaStreamMessageResponse.MediaSample = mediaSampleResponse;
+                    mediaStreamMessageResponse.MediaSample = new MediaSample();
                     await responseStream.WriteAsync(mediaStreamMessageResponse);
                     messageCount++;
                     continue;
@@ -99,25 +98,24 @@ namespace GrpcExtension
                     NormalizeInference(inference);
                 }
 
-                // Process image
-                _logger.LogInformation($"Call process image");
-                var inferencesResponse = _imageProcessor.ProcessImage(imageBatch);
+                // Process images
+                var inferencesResponse = _imageProcessor.ProcessImages(imageBatch);
+                var mediaSampleResponse = new MediaSample()
+                {
+                    Inferences = { inferencesResponse }
+                };
 
-                mediaSampleResponse.Inferences.AddRange(inferencesResponse);
                 mediaStreamMessageResponse.MediaSample = mediaSampleResponse;
 
-                _logger.LogInformation($"Send response");
                 await responseStream.WriteAsync(mediaStreamMessageResponse);
                 imageBatch.Clear();
                 messageCount = 1;
             }
         }
 
-        private async Task<Image> GetImageFromContent(ReadOnlyMemory<byte> content)
+        private Image GetImageFromContent(ReadOnlyMemory<byte> content)
         {
-            var stream = new MemoryStream();
-            await stream.WriteAsync(content);
-            return Image.FromStream(stream);
+            return Image.FromStream(new MemoryStream(content.ToArray()));
         }
 
         private static void NormalizeInference(Inference inference)
