@@ -5,10 +5,10 @@ using Grpc.Core;
 using GrpcExtension.Core;
 using GrpcExtension.Processors;
 using Microsoft.Extensions.Logging;
+using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Threading.Tasks;
 
@@ -37,11 +37,12 @@ namespace GrpcExtension
             var requestMessage = requestStream.Current;
             _logger.LogInformation($"[Received MediaStreamDescriptor] SequenceNum: {requestMessage.SequenceNumber}");
             var response = ProcessMediaStreamDescriptor(requestMessage.MediaStreamDescriptor);
+            
             var responseMessage = new MediaStreamMessage()
             {
                 MediaStreamDescriptor = response
             };
-
+            
             await responseStream.WriteAsync(responseMessage);
 
             // Process rest of the MediaStream message sequence
@@ -50,74 +51,85 @@ namespace GrpcExtension
             List<Image> imageBatch = new List<Image>();
             while (await requestStream.MoveNext())
             {
-                // Extract message IDs
-                requestMessage = requestStream.Current;
-                var requestSeqNum = requestMessage.SequenceNumber;
-                _logger.LogInformation($"[Received MediaSample] SequenceNum: {requestSeqNum}");
-
-                // Retrieve the sample content
-                ReadOnlyMemory<byte> content = null;
-                var inputSample = requestMessage.MediaSample;
-
-                switch (inputSample.ContentCase)
+                try
                 {
-                    case MediaSample.ContentOneofCase.ContentReference:
+                    // Extract message IDs
+                    requestMessage = requestStream.Current;
+                    var requestSeqNum = requestMessage.SequenceNumber;
+                    _logger.LogInformation($"[Received MediaSample] SequenceNum: {requestSeqNum}");
 
-                        content = _memory.Slice(
-                            (int)inputSample.ContentReference.AddressOffset,
-                            (int)inputSample.ContentReference.LengthBytes);
+                    // Retrieve the sample content
+                    ReadOnlyMemory<byte> content = null;
+                    var inputSample = requestMessage.MediaSample;
 
-                        break;
+                    switch (inputSample.ContentCase)
+                    {
+                        case MediaSample.ContentOneofCase.ContentReference:
 
-                    case MediaSample.ContentOneofCase.ContentBytes:
-                        content = inputSample.ContentBytes.Bytes.ToByteArray();
-                        break;
-                }
+                            content = _memory.Slice(
+                                (int)inputSample.ContentReference.AddressOffset,
+                                (int)inputSample.ContentReference.LengthBytes);
 
-                _logger.LogInformation($"Message content read");
-                var mediaSampleResponse = new MediaSample();
-                var mediaStreamMessageResponse = new MediaStreamMessage()
-                {
-                    SequenceNumber = ++responseSeqNum,
-                    AckSequenceNumber = requestSeqNum
-                };
+                            break;
 
-                imageBatch.Add(await GetImageFromContent(content));
+                        case MediaSample.ContentOneofCase.ContentBytes:
+                            content = inputSample.ContentBytes.Bytes.ToByteArray();
+                            break;
+                    }
 
-                // If batch size hasn't been reached, return dummy response
-                if (messageCount < _batchSize)
-                {
-                    // Return acknowledge message
+                    _logger.LogInformation($"Message content read");
+                    var mediaSampleResponse = new MediaSample();
+                    var mediaStreamMessageResponse = new MediaStreamMessage()
+                    {
+                        SequenceNumber = ++responseSeqNum,
+                        AckSequenceNumber = requestSeqNum
+                    };
+
+                     _logger.LogInformation($"Call get image from content");
+                    imageBatch.Add(GetImageFromContent(content.ToArray()));
+
+                    // If batch size hasn't been reached, return dummy response
+                    if (messageCount < _batchSize)
+                    {
+                        // Return acknowledge message
+                        mediaStreamMessageResponse.MediaSample = mediaSampleResponse;
+                        await responseStream.WriteAsync(mediaStreamMessageResponse);
+                        messageCount++;
+                        continue;
+                    }
+
+                    foreach (var inference in inputSample.Inferences)
+                    {
+                        NormalizeInference(inference);
+                    }
+
+                    // Process image
+                    _logger.LogInformation($"Call process image");
+                    var inferencesResponse = _imageProcessor.ProcessImage(imageBatch);
+
+                    mediaSampleResponse.Inferences.AddRange(inferencesResponse);
                     mediaStreamMessageResponse.MediaSample = mediaSampleResponse;
+
+                    _logger.LogInformation($"Send response");
                     await responseStream.WriteAsync(mediaStreamMessageResponse);
-                    messageCount++;
-                    continue;
+                    imageBatch.Clear();
+                    messageCount = 1;
                 }
-
-                foreach (var inference in inputSample.Inferences)
+                catch (Exception ex)
                 {
-                    NormalizeInference(inference);
+                    _logger.LogInformation($"Error processing MediaSample message: {ex}.");
                 }
-
-                // Process image
-                _logger.LogInformation($"Call process image");
-                var inferencesResponse = _imageProcessor.ProcessImage(imageBatch);
-
-                mediaSampleResponse.Inferences.AddRange(inferencesResponse);
-                mediaStreamMessageResponse.MediaSample = mediaSampleResponse;
-
-                _logger.LogInformation($"Send response");
-                await responseStream.WriteAsync(mediaStreamMessageResponse);
-                imageBatch.Clear();
-                messageCount = 1;
             }
         }
 
-        private async Task<Image> GetImageFromContent(ReadOnlyMemory<byte> content)
+        private Image GetImageFromContent(byte[] content)
         {
-            var stream = new MemoryStream();
-            await stream.WriteAsync(content);
-            return Image.FromStream(stream);
+            _logger.LogInformation($"Mat from image");
+            var mode = ImreadModes.Color;
+            Mat frame = Mat.FromImageData(content, mode);
+            _logger.LogInformation($"frame is null {frame == null}");
+            _logger.LogInformation($"bitmap converter");
+            return OpenCvSharp.Extensions.BitmapConverter.ToBitmap(frame);
         }
 
         private static void NormalizeInference(Inference inference)
@@ -201,7 +213,7 @@ namespace GrpcExtension
             if (!_imageProcessor.IsMediaFormatSupported(mediaStreamDescriptor.MediaDescriptor, out var errorMessage))
             {
                 _logger.LogInformation($"validate enconding: {errorMessage}");
-                throw new RpcException(new Status(StatusCode.OutOfRange, errorMessage));
+                //throw new RpcException(new Status(StatusCode.OutOfRange, errorMessage));
             }
 
             // Cache the client media descriptor for this stream
