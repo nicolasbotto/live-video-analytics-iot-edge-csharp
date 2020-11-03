@@ -77,19 +77,19 @@ namespace GrpcExtension.Processors
             {
                 case MediaDescriptor.MediaSampleFormatOneofCase.VideoFrameSampleFormat:
 
-                    // var videoSampleFormat = mediaDescriptor.VideoFrameSampleFormat;
+                    var videoSampleFormat = mediaDescriptor.VideoFrameSampleFormat;
 
-                    //  if (videoSampleFormat.Encoding != VideoFrameSampleFormat.Types.Encoding.Jpg)
-                    // {
-                    //     errorMessage = $"{videoSampleFormat.Encoding} encoding is not supported. Supported: Jpg";
-                    //     return false;
-                    // }
+                     if (videoSampleFormat.Encoding != VideoFrameSampleFormat.Types.Encoding.Jpg)
+                    {
+                        errorMessage = $"{videoSampleFormat.Encoding} encoding is not supported. Supported: Jpg";
+                        return false;
+                    }
 
-                    // if (videoSampleFormat.PixelFormat != VideoFrameSampleFormat.Types.PixelFormat.None)
-                    // {
-                    //     errorMessage = $"{videoSampleFormat.PixelFormat} pixel format is not supported. Supported: None";
-                    //     return false;
-                    // }
+                    if (videoSampleFormat.PixelFormat != VideoFrameSampleFormat.Types.PixelFormat.None)
+                    {
+                        errorMessage = $"{videoSampleFormat.PixelFormat} pixel format is not supported. Supported: None";
+                        return false;
+                    }
 
                     return true;
 
@@ -142,7 +142,7 @@ namespace GrpcExtension.Processors
         private byte[] GetBytes(Bitmap image)
         {
             MemoryStream stream = new MemoryStream();
-            image.Save(stream, ImageFormat.Bmp);
+            image.Save(stream, ImageFormat.Jpeg);
             return stream.ToArray();
         }
     }
