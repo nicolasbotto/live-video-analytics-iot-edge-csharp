@@ -1,0 +1,37 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+FROM ubuntu:18.04 as base
+
+# Copy LVA extension specific files
+RUN mkdir /app
+COPY ./app/*.py /app/
+
+# Install python
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip python3-dev libglib2.0-0 libsm6 libxext6 libxrender-dev\
+    && cd /usr/local/bin \
+    && ln -s /usr/bin/python3 python \
+    && pip3 install --upgrade pip \
+    && pip3 install numpy pillow opencv-python\
+    && apt-get clean
+
+# Install required python packages 
+RUN pip3 install requests protobuf grpcio && \
+    apt-get install -y libgl1-mesa-dev
+
+EXPOSE 5001
+
+# Starts the LVA gRPC extension server
+
+# Debug
+# FROM base as debug
+# WORKDIR /app/
+# RUN pip3 install ptvsd
+# EXPOSE 5678
+# CMD python3 -m ptvsd --host 0.0.0.0 --port 5678 --wait main.py -p 5001
+#####
+
+FROM base as final
+WORKDIR /app/
+CMD python3 main.py -p 5001
