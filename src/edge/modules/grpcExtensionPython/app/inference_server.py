@@ -66,7 +66,7 @@ class InferenceServer(extension_pb2_grpc.MediaGraphExtensionServicer):
         try:
             # Get reference to raw bytes
             if clientState._contentTransferType == TransferType.BYTES:
-                rawBytes = mediaStreamMessageRequest.media_sample.content_bytes.bytes
+                rawBytes = memoryview(mediaStreamMessageRequest.media_sample.content_bytes.bytes)
             elif clientState._contentTransferType == TransferType.REFERENCE:
                 # Data sent over shared memory buffer
                 addressOffset = mediaStreamMessageRequest.media_sample.content_reference.address_offset
@@ -80,20 +80,10 @@ class InferenceServer(extension_pb2_grpc.MediaGraphExtensionServicer):
 
             # Handle RAW content (Just place holder for the user to handle each variation...)
             if encoding == clientState._mediaStreamDescriptor.media_descriptor.video_frame_sample_format.Encoding.RAW:
-                pixelFormat = clientState._mediaStreamDescriptor.media_descriptor.video_frame_sample_format.pixel_format
-                imageFormat = None
-
-                if pixelFormat == media_pb2.VideoFrameSampleFormat.PixelFormat.RGBA:
-                    imageFormat = 'RGBA'
-                elif pixelFormat == media_pb2.VideoFrameSampleFormat.PixelFormat.RGB24:
-                    imageFormat = 'RGB'
-                elif pixelFormat == media_pb2.VideoFrameSampleFormat.PixelFormat.BGR24:
-                    imageFormat = 'BGR'
-
                 width = clientState._mediaStreamDescriptor.media_descriptor.video_frame_sample_format.dimensions.width
                 height = clientState._mediaStreamDescriptor.media_descriptor.video_frame_sample_format.dimensions.height
 
-                return self.processor.ProcessImages(rawBytes, imageFormat, (width, height))                                           
+                return self.processor.ProcessImages(rawBytes, (width, height))                                           
             else:
                 logging.info('Sample format is not RAW')
         
@@ -141,11 +131,12 @@ class InferenceServer(extension_pb2_grpc.MediaGraphExtensionServicer):
  
         # Process rest of the MediaStream message sequence
         for mediaStreamMessageRequest in requestIterator:
-            try:               
+            try:
+                
                 # Read request id, sent by client
                 requestSeqNum = mediaStreamMessageRequest.sequence_number
                 timestamp = mediaStreamMessageRequest.media_sample.timestamp
-                           
+                        
                 logging.info('[Received] SequenceNum: {0:07d}'.format(requestSeqNum))
 
                 # Process message              
@@ -166,9 +157,11 @@ class InferenceServer(extension_pb2_grpc.MediaGraphExtensionServicer):
                 mediaStreamMessage.ack_sequence_number = mediaStreamMessageRequest.sequence_number
                 mediaStreamMessage.media_sample.timestamp = mediaStreamMessageRequest.media_sample.timestamp
 
-                # yield response                        
-                yield mediaStreamMessage                    
-
+                if context.is_active():
+                    # yield response                        
+                    yield mediaStreamMessage    
+                else:
+                    break
             except:
                 PrintGetExceptionDetails()
 

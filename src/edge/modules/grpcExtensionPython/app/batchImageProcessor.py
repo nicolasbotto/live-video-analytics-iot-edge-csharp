@@ -11,10 +11,11 @@ class BatchImageProcessor():
     def __init__(self):
         return
     
-    def ProcessImages(self, rawBytes, imageFormat, size):
-        im = Image.frombytes(imageFormat, size, rawBytes)
+    def ProcessImages(self, rawBytes, size):
+        im = Image.frombytes('RGB', size, rawBytes.tobytes())
        
         draw = ImageDraw.Draw(im)
+
         imgBuf = io.BytesIO()
         im.save(imgBuf, format='JPEG')
 
@@ -22,9 +23,9 @@ class BatchImageProcessor():
         
         # Convert to grayscale
         cvGrayImage = cv.imdecode(imgBytes, cv.COLOR_BGR2RGB)
-        
         grayBytes = cvGrayImage.tobytes()
 
+        # Calculate intensity
         totalColor  = cvGrayImage.sum()
         avgColor = totalColor / len(grayBytes)
         colorIntensity = 'dark'
@@ -41,7 +42,7 @@ class BatchImageProcessor():
                                         tag = inferencing_pb2.Tag(
                                             value = colorIntensity,
                                             confidence = 1.0
-                                        )							
+                                        )
                                     )
         inference.classification.CopyFrom(classification)
 
