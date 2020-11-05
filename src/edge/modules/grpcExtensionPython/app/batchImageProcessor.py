@@ -30,7 +30,7 @@ class BatchImageProcessor():
         avgColor = totalColor / len(grayBytes)
         colorIntensity = 'dark'
 
-        if(avgColor > 127):
+        if(avgColor < 127):
             colorIntensity = 'light'
 
         logging.info('Color intensity: {}'.format(colorIntensity))
