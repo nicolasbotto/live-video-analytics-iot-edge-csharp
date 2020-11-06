@@ -63,8 +63,6 @@ namespace GrpcExtension.Processors
 
                     logger.LogInformation($"Average color = {avgColor}");
                 }
-
-                //return inferences;
             }
             catch (Exception ex)
             {
@@ -83,22 +81,15 @@ namespace GrpcExtension.Processors
         public bool IsMediaFormatSupported(MediaDescriptor mediaDescriptor, out string errorMessage)
         {
             errorMessage = null;
-            logger.LogInformation($"IsMediaFormatSupported {mediaDescriptor.MediaSampleFormatCase}:{mediaDescriptor.VideoFrameSampleFormat.Encoding}:{mediaDescriptor.VideoFrameSampleFormat.PixelFormat}.");
             switch (mediaDescriptor.MediaSampleFormatCase)
             {
                 case MediaDescriptor.MediaSampleFormatOneofCase.VideoFrameSampleFormat:
 
                     var videoSampleFormat = mediaDescriptor.VideoFrameSampleFormat;
 
-                    if (videoSampleFormat.Encoding != VideoFrameSampleFormat.Types.Encoding.Jpg)
+                    if (videoSampleFormat.Encoding != VideoFrameSampleFormat.Types.Encoding.Raw)
                     {
-                        errorMessage = $"{videoSampleFormat.Encoding} encoding is not supported. Supported: Jpg";
-                        return false;
-                    }
-
-                    if (videoSampleFormat.PixelFormat != VideoFrameSampleFormat.Types.PixelFormat.None)
-                    {
-                        errorMessage = $"{videoSampleFormat.PixelFormat} pixel format is not supported. Supported: None";
+                        errorMessage = $"{videoSampleFormat.Encoding} encoding is not supported. Supported: Raw";
                         return false;
                     }
 

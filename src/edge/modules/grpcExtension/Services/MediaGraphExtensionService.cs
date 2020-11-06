@@ -8,8 +8,9 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
+using System.Drawing.Imaging;
 using System.IO.MemoryMappedFiles;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace GrpcExtension
@@ -46,6 +47,8 @@ namespace GrpcExtension
             await responseStream.WriteAsync(responseMessage);
 
             // Process rest of the MediaStream message sequence
+            var height = (int)requestMessage.MediaStreamDescriptor.MediaDescriptor.VideoFrameSampleFormat.Dimensions.Height;
+            var width = (int)requestMessage.MediaStreamDescriptor.MediaDescriptor.VideoFrameSampleFormat.Dimensions.Width;
             ulong responseSeqNum = 0;
             int messageCount = 1;
             List<Image> imageBatch = new List<Image>();
@@ -81,7 +84,7 @@ namespace GrpcExtension
                     AckSequenceNumber = requestSeqNum
                 };
 
-                imageBatch.Add(GetImageFromContent(content));
+                imageBatch.Add(GetImageFromContent(content, width, height));
 
                 // If batch size hasn't been reached
                 if (messageCount < _batchSize)
@@ -113,9 +116,20 @@ namespace GrpcExtension
             }
         }
 
-        private Image GetImageFromContent(ReadOnlyMemory<byte> content)
+        private Image GetImageFromContent(ReadOnlyMemory<byte> content, int width, int height)
         {
-            return Image.FromStream(new MemoryStream(content.ToArray()));
+            var imageBytes = content.ToArray();
+            var region = new System.Drawing.Rectangle(0, 0, width, height);
+            var bitmap = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+            BitmapData bitmapData = bitmap.LockBits(region, ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+
+            var length = Math.Abs(bitmapData.Stride) * height;
+
+            Marshal.Copy(imageBytes, 0, bitmapData.Scan0, length);
+
+            bitmap.UnlockBits(bitmapData);
+
+            return bitmap;
         }
 
         private static void NormalizeInference(Inference inference)
