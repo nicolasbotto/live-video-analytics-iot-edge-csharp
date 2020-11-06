@@ -122,17 +122,15 @@ class InferenceServer(extension_pb2_grpc.MediaGraphExtensionServicer):
                                         )
                                     )
                                 )
+        # Send acknowledge message to client    
         yield mediaStreamMessage
 
         width = clientState._mediaStreamDescriptor.media_descriptor.video_frame_sample_format.dimensions.width
         height = clientState._mediaStreamDescriptor.media_descriptor.video_frame_sample_format.dimensions.height
-
-        #msgQueue = Queue(maxsize=10)
  
         # Process rest of the MediaStream message sequence
         for mediaStreamMessageRequest in requestIterator:
             try:
-                
                 # Read request id, sent by client
                 requestSeqNum = mediaStreamMessageRequest.sequence_number
                 timestamp = mediaStreamMessageRequest.media_sample.timestamp

@@ -12,13 +12,11 @@ class BatchImageProcessor():
         return
     
     def ProcessImages(self, rawBytes, size):
+        # Read image raw bytes
         im = Image.frombytes('RGB', size, rawBytes.tobytes())
-       
         draw = ImageDraw.Draw(im)
-
         imgBuf = io.BytesIO()
         im.save(imgBuf, format='JPEG')
-
         imgBytes = np.frombuffer(imgBuf.getvalue(), dtype=np.uint8)
         
         # Convert to grayscale
@@ -26,7 +24,7 @@ class BatchImageProcessor():
         grayBytes = cvGrayImage.tobytes()
 
         # Calculate intensity
-        totalColor  = cvGrayImage.sum()
+        totalColor = cvGrayImage.sum()
         avgColor = totalColor / len(grayBytes)
         colorIntensity = 'dark'
 

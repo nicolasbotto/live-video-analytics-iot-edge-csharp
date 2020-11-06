@@ -9,40 +9,39 @@ This gRPC server enables your own IoT Edge module to accept video frames as [pro
 
 ### Design
 
-This gPRC server is a .NET Core console application that will house your custom AI and is built to handle the [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) messages sent between LVA and your custom AI. LVA sends a media stream descriptor which defines what information will be sent followed by video frames to the server as a [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) message over the gRPC stream session. The server validates the stream descriptor, analyses the video frame, processes it using an Image Processor, and returns inference results as a [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) message. 
+This gPRC server is a Python terminal application that will house your custom AI and is built to handle the [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) messages sent between LVA and your custom AI. LVA sends a media stream descriptor which defines what information will be sent followed by video frames to the server as a [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) message over the gRPC stream session. The server validates the stream descriptor, analyses the video frame, processes it using an Image Processor, and returns inference results as a [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) message. 
 The frames can be transferred through shared memory or they can be embedded in the message. The date transfer mode can be configured in the Media Graph topology to determine how frames will be transferred.
-The gRPC server supports batching frames, this is configured using the *batchSize* parameter.
 
-*Program.cs*: this is the entry point of the application. It is responsible for the configuring and management of the gRPC server.
+*main.py*: this is the entry point of the application. It is responsible for the configuring and management of the gRPC server.
 
 
 ```
-Task StartAsync(CancellationToken cancellationToken)
+Main()
 ```
 In this method we:
 1. Create an instance of gRPC server.
-2. Create an instance of the service implementation class **MediaGraphExtensionService**.
-3. Register MediaGraphExtensionService service implementation by adding its service definition to the Services collection.
+2. Create an instance of the service implementation class **InferenceServer**.
+3. Register InferenceServer service implementation by adding its service definition to the Services collection.
 4. Set the address and port the gRPC server will listen on for client requests.
 5. Initialize the gRPC server.
 
-*Services\MediaGraphExtensionService.cs*: this class is responsible for handling the  [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) messages communication with the LVA client. 
+*inference_server.py*: this class is responsible for handling the  [protobuf](https://github.com/Azure/live-video-analytics/tree/master/contracts/grpc) messages communication with the LVA client. 
 
 ```
-async override Task ProcessMediaStream(IAsyncStreamReader<MediaStreamMessage> requestStream, IServerStreamWriter<MediaStreamMessage> responseStream, ServerCallContext context)
+ProcessMediaStream(self, requestIterator, context)
 ```
 The client sends a media stream descriptor followed by video frames to the server as a protobuf message over the gRPC stream session. 
 
 In this method we:
-1. Read and validate the MediaStreamDescriptor (it is the first message sent by the client). The sample processor we're using only supports JPG encoding and None as pixel format. In case your custom processor supports a different encoding and/or format, update the **IsMediaFormatSupported** method of the processor class.
+1. Read and validate the MediaStreamDescriptor (it is the first message sent by the client).
 2. If the media stream descriptor is valid, the gRPC reads and analyzes the sequence of media samples containing the video frame, and returns inference results as a protobuf message.
 
-*Processors\BatchImageProcessor.cs*: this class is responsible for processing the image. In a nutshell, it converts an image to grayscale and determines if its color intensity is dark or light. You can add your own processor logic by adding a new class and implementing the method:
+*batchImageProcessor.py*: this class is responsible for processing the image. In a nutshell, it reads the raw bytes, converts an image to grayscale and determines if its color intensity is dark or light. You can add your own processor logic by adding a new class and implementing the method:
 
 ```
-IEnumerable<Inference> ProcessImage(List<Image> images)
+ProcessImages(self, rawBytes, size):
 ```
-Once you've added the new class, you'll have to update the MediaGraphExtensionService so it instantiates your class and invokes the **ProcessImage** method on it to run your processing logic.
+Once you've added the new class, you'll have to update the InferenceServer so it instantiates your class and invokes the **ProcessImage** method on it to run your processing logic.
 
 ### Building, publishing and running the Docker container
 
@@ -68,15 +67,14 @@ sudo docker push myregistry.azurecr.io/grpcextension:1
 
 Then, from the box where the container should execute, run this command:
 
-`sudo docker run -d -p 5001:5001 --name grpcextension myregistry.azurecr.io/grpcextension:1 --grpcBinding tcp://0.0.0.0:5001 --batchSize 1`
+`sudo docker run -d -p 5001:5001 --name grpcextension myregistry.azurecr.io/grpcextension:1 -p 5001`
 
 Let's decompose it a bit:
 
 * `-p 5001:5001`: it's up to you where you'd like to map the containers 5001 port. You can pick whatever port fits your needs.
 * `--name`: the name of the running container.
 * `registry/image:tag`: replace this with the corresponding location/image:tag where you've pushed the image built from the `Dockerfile`
-* `--grpcBinding`: the port the gRPC server will listen on
-* `--batchSize`: the size of the batch
+* `-p`: the port the gRPC server will listen on
 
 ### Updating references into Topologies, to target the gRPC Extension Address
 The [gRPCExtension topology](https://github.com/Azure/live-video-analytics/blob/master/MediaGraph/topologies/grpcExtension/topology.json) must define an gRPC Extension Address:
@@ -115,9 +113,8 @@ The [gRPCExtension topology](https://github.com/Azure/live-video-analytics/blob/
         "height": "${frameHeight}"
         },
         "format": {
-        "@type": "#Microsoft.Media.MediaGraphImageFormatEncoded",
-        "encoding": "${imageEncoding}",
-        "quality": "${imageQuality}"
+          "@type": "#Microsoft.Media.MediaGraphImageFormatRaw",
+          "pixelFormat": "${imageRawFormat}"
         }
     },
     "inputs": [

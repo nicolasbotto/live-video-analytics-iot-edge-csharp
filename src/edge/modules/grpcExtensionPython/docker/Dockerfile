@@ -20,9 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip3 install requests protobuf grpcio && \
     apt-get install -y libgl1-mesa-dev
 
-EXPOSE 5001
-
 # Starts the LVA gRPC extension server
 FROM base as final
 WORKDIR /app/
-CMD python3 main.py -p 5001
+ENTRYPOINT ["python3", "main.py"]

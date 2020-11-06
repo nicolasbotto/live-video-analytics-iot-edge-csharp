@@ -1,15 +1,13 @@
 import sys
 import logging
-
 from exception_handler import PrintGetExceptionDetails
 from inference_server import  InferenceServer
-
 import grpc
 import extension_pb2_grpc
 from concurrent import futures
-
 import argparse
 
+# Set message size to 20Mb
 MAX_MESSAGE_LENGTH = 20 * 1024 * 1024
 # Main thread
 def Main():
@@ -21,13 +19,13 @@ def Main():
     
         _arguments = parser.parse_args()
 
-
-        grpcServerPort = 0
+        # Default to port 5001
+        grpcServerPort = 5001
         # Get port number
         if (_arguments.p is not None):          
             grpcServerPort = _arguments.p[0]
         else:
-            raise Exception('gRPC server port is missing')
+            logging.info('No port number passed, using default port: {0}'.format(grpcServerPort))
 
         logging.info('gRPC server port with: {0}'.format(grpcServerPort))
 
@@ -51,7 +49,6 @@ if __name__ == "__main__":
         level=logging.INFO,
         format='[%(asctime)-15s] [%(threadName)-12.12s] [%(levelname)s]: %(message)s',
         handlers=[
-            #logging.FileHandler(LOG_FILE_NAME),     # write in a log file
             logging.StreamHandler(sys.stdout)       # write in stdout
         ]
     )
