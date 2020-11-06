@@ -6,9 +6,8 @@ import grpc
 import extension_pb2_grpc
 from concurrent import futures
 import argparse
+import os
 
-# Set message size to 20Mb
-MAX_MESSAGE_LENGTH = 20 * 1024 * 1024
 # Main thread
 def Main():
     try:
@@ -24,16 +23,17 @@ def Main():
         # Get port number
         if (_arguments.p is not None):          
             grpcServerPort = _arguments.p[0]
-        else:
-            logging.info('No port number passed, using default port: {0}'.format(grpcServerPort))
+        
+        # Get port from environment variable (overrides argument)
+        envPort = os.getenv('port')
 
+        if(envPort is not None):
+            grpcServerPort = envPort
+       
         logging.info('gRPC server port with: {0}'.format(grpcServerPort))
 
         # create gRPC server and start running
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=3), options=[
-          ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
-          ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH)
-        ])
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=3))
         extension_pb2_grpc.add_MediaGraphExtensionServicer_to_server(InferenceServer(), server)
         server.add_insecure_port(f'[::]:{grpcServerPort}')
         server.start()
