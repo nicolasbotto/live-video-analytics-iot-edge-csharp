@@ -34,7 +34,7 @@ async override Task ProcessMediaStream(IAsyncStreamReader<MediaStreamMessage> re
 The client sends a media stream descriptor followed by video frames to the server as a protobuf message over the gRPC stream session. 
 
 In this method we:
-1. Read and validate the MediaStreamDescriptor (it is the first message sent by the client). The sample processor we're using only supports JPG encoding and None as pixel format. In case your custom processor supports a different encoding and/or format, update the **IsMediaFormatSupported** method of the processor class.
+1. Read and validate the MediaStreamDescriptor (it is the first message sent by the client). The sample processor we're using only supports RAW as encoding. In case your custom processor supports a different encoding and/or format, update the **IsMediaFormatSupported** method of the processor class.
 2. If the media stream descriptor is valid, the gRPC reads and analyzes the sequence of media samples containing the video frame, and returns inference results as a protobuf message.
 
 *Processors\BatchImageProcessor.cs*: this class is responsible for processing the image. In a nutshell, it converts an image to grayscale and determines if its color intensity is dark or light. You can add your own processor logic by adding a new class and implementing the method:
