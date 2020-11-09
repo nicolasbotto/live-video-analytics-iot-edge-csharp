@@ -112,14 +112,13 @@ The [gRPCExtension topology](https://github.com/Azure/live-video-analytics/blob/
     },
     "image": {
         "scale": {
-        "mode": "${imageScaleMode}",
-        "width": "${frameWidth}",
-        "height": "${frameHeight}"
+            "mode": "${imageScaleMode}",
+            "width": "${frameWidth}",
+            "height": "${frameHeight}"
         },
         "format": {
-        "@type": "#Microsoft.Media.MediaGraphImageFormatEncoded",
-        "encoding": "${imageEncoding}",
-        "quality": "${imageQuality}"
+            "@type": "#Microsoft.Media.MediaGraphImageFormatRaw",
+            "pixelFormat": "Bgr24"
         }
     },
     "inputs": [
