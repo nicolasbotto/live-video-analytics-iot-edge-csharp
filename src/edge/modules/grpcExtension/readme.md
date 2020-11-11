@@ -80,6 +80,45 @@ Let's decompose it a bit:
 
 The gRPC listens on the configured port allowing clients to craete a channel to the port.
 
+### Updating the deployment template
+
+Add a new entry to the deployment template for the gRPC module. You will need to update the following parameters:
+* "image": 
+    * `registry/image:tag`: replace this with the corresponding location/image:tag where you've pushed the image built from the `Dockerfile`
+* "IpcMode": 
+    * `container:lvaEdge`: where `lvaEdge` is the name of the LVA module. You'll need to set this `IpcMode` when shared memory is going to be used as transfer mode.
+* "Env": you can override the port and batch size by setting the following environment variables:
+    * `grpcBinding`: the port the gRPC server will listen on, in the excerpt below the gRPC server is listening on port 5001
+    * `batchSize`: the size of the batch, set batchSize=1 to run on a per frame basis
+
+```json
+"lvaextension": {
+    "version": "1.0",
+    "type": "docker",
+    "status": "running",
+    "restartPolicy": "always",
+    "settings": {
+        "image": "registry/image:tag",
+        "createOptions": {
+            "HostConfig": {
+            "LogConfig": {
+                "Type": "",
+                "Config": {
+                    "max-size": "10m",
+                    "max-file": "10"
+                }
+            },        
+            "IpcMode": "container:lvaEdge"
+            },
+            "Env":[
+                "grpcBinding=tcp://0.0.0.0:5001",
+                "batchSize=1"
+            ]
+        }   
+    }
+}
+```
+
 ### Updating references into Topologies, to target the gRPC Extension Address
 The [gRPCExtension topology](https://github.com/Azure/live-video-analytics/blob/master/MediaGraph/topologies/grpcExtension/topology.json) must define an gRPC Extension Address:
 
