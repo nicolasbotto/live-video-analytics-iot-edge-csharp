@@ -34,7 +34,7 @@ async override Task ProcessMediaStream(IAsyncStreamReader<MediaStreamMessage> re
 The client sends a media stream descriptor followed by video frames to the server as a protobuf message over the gRPC stream session. 
 
 In this method we:
-1. Read and validate the MediaStreamDescriptor (it is the first message sent by the client). The sample processor we're using only supports JPG encoding and None as pixel format. In case your custom processor supports a different encoding and/or format, update the **IsMediaFormatSupported** method of the processor class.
+1. Read and validate the MediaStreamDescriptor (it is the first message sent by the client). The sample processor we're using only supports RAW format. In case your custom processor supports a different encoding and/or format, update the **IsMediaFormatSupported** method of the processor class.
 2. If the media stream descriptor is valid, the gRPC reads and analyzes the sequence of media samples containing the video frame, and returns inference results as a protobuf message.
 
 *Processors\BatchImageProcessor.cs*: this class is responsible for processing the image. In a nutshell, it converts an image to grayscale and determines if its color intensity is dark or light. You can add your own processor logic by adding a new class and implementing the method:
@@ -80,6 +80,45 @@ Let's decompose it a bit:
 
 The gRPC listens on the configured port allowing clients to craete a channel to the port.
 
+### Updating the deployment template
+
+Add a new entry to the deployment template for the gRPC module. You will need to update the following parameters:
+* "image": 
+    * `registry/image:tag`: replace this with the corresponding location/image:tag where you've pushed the image built from the `Dockerfile`
+* "IpcMode": 
+    * `container:lvaEdge`: where `lvaEdge` is the name of the LVA module. You'll need to set this `IpcMode` when shared memory is going to be used as transfer mode.
+* "Env": you can override the port and batch size by setting the following environment variables:
+    * `grpcBinding`: the port the gRPC server will listen on, in the excerpt below the gRPC server is listening on port 5001
+    * `batchSize`: the size of the batch, set batchSize=1 to run on a per frame basis
+
+```json
+"lvaextension": {
+    "version": "1.0",
+    "type": "docker",
+    "status": "running",
+    "restartPolicy": "always",
+    "settings": {
+        "image": "registry/image:tag",
+        "createOptions": {
+            "HostConfig": {
+            "LogConfig": {
+                "Type": "",
+                "Config": {
+                    "max-size": "10m",
+                    "max-file": "10"
+                }
+            },        
+            "IpcMode": "container:lvaEdge"
+            },
+            "Env":[
+                "grpcBinding=tcp://0.0.0.0:5001",
+                "batchSize=1"
+            ]
+        }   
+    }
+}
+```
+
 ### Updating references into Topologies, to target the gRPC Extension Address
 The [gRPCExtension topology](https://github.com/Azure/live-video-analytics/blob/master/MediaGraph/topologies/grpcExtension/topology.json) must define an gRPC Extension Address:
 
@@ -112,14 +151,13 @@ The [gRPCExtension topology](https://github.com/Azure/live-video-analytics/blob/
     },
     "image": {
         "scale": {
-        "mode": "${imageScaleMode}",
-        "width": "${frameWidth}",
-        "height": "${frameHeight}"
+            "mode": "${imageScaleMode}",
+            "width": "${frameWidth}",
+            "height": "${frameHeight}"
         },
         "format": {
-        "@type": "#Microsoft.Media.MediaGraphImageFormatEncoded",
-        "encoding": "${imageEncoding}",
-        "quality": "${imageQuality}"
+            "@type": "#Microsoft.Media.MediaGraphImageFormatRaw",
+            "pixelFormat": "Bgr24"
         }
     },
     "inputs": [

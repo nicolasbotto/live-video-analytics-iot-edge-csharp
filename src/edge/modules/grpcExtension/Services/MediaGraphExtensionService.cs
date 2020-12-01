@@ -8,35 +8,36 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
+using System.Drawing.Imaging;
 using System.IO.MemoryMappedFiles;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace GrpcExtension
 {
-    public class MediaGraphExtensionService : MediaGraphExtension.MediaGraphExtensionBase, IDisposable
+    public class MediaGraphExtensionService : MediaGraphExtension.MediaGraphExtensionBase
     {
         private readonly ILogger _logger;
         private readonly int _batchSize;
-        private readonly BatchImageProcessor _imageProcessor;
-        private MemoryMappedFileMemoryManager<byte> _memoryManager;
-        private MediaDescriptor _clientMediaDescriptor;
-        private Memory<byte> _memory;
 
         public MediaGraphExtensionService(ILogger logger, int batchSize)
         {
             _logger = logger;
             _batchSize = batchSize;
-            _imageProcessor = new BatchImageProcessor(_logger);
         }
 
         public async override Task ProcessMediaStream(IAsyncStreamReader<MediaStreamMessage> requestStream, IServerStreamWriter<MediaStreamMessage> responseStream, ServerCallContext context)
         {
             //First message from the client is (must be) MediaStreamDescriptor
+            var clientState = new StreamState()
+            {
+                Processor = new BatchImageProcessor(_logger)
+            };
+            
             _ = await requestStream.MoveNext();
             var requestMessage = requestStream.Current;
             _logger.LogInformation($"[Received MediaStreamDescriptor] SequenceNum: {requestMessage.SequenceNumber}");
-            var response = ProcessMediaStreamDescriptor(requestMessage.MediaStreamDescriptor);
+            var response = ProcessMediaStreamDescriptor(requestMessage.MediaStreamDescriptor, clientState);
             
             var responseMessage = new MediaStreamMessage()
             {
@@ -46,6 +47,8 @@ namespace GrpcExtension
             await responseStream.WriteAsync(responseMessage);
 
             // Process rest of the MediaStream message sequence
+            var height = (int)requestMessage.MediaStreamDescriptor.MediaDescriptor.VideoFrameSampleFormat.Dimensions.Height;
+            var width = (int)requestMessage.MediaStreamDescriptor.MediaDescriptor.VideoFrameSampleFormat.Dimensions.Width;
             ulong responseSeqNum = 0;
             int messageCount = 1;
             List<Image> imageBatch = new List<Image>();
@@ -64,7 +67,7 @@ namespace GrpcExtension
                 {
                     case MediaSample.ContentOneofCase.ContentReference:
 
-                        content = _memory.Slice(
+                        content = clientState.MemoryMappedFile.Memory.Slice(
                             (int)inputSample.ContentReference.AddressOffset,
                             (int)inputSample.ContentReference.LengthBytes);
 
@@ -81,7 +84,7 @@ namespace GrpcExtension
                     AckSequenceNumber = requestSeqNum
                 };
 
-                imageBatch.Add(GetImageFromContent(content));
+                imageBatch.Add(GetImageFromContent(content, width, height));
 
                 // If batch size hasn't been reached
                 if (messageCount < _batchSize)
@@ -99,7 +102,7 @@ namespace GrpcExtension
                 }
 
                 // Process images
-                var inferencesResponse = _imageProcessor.ProcessImages(imageBatch);
+                var inferencesResponse = clientState.Processor.ProcessImages(imageBatch);
                 var mediaSampleResponse = new MediaSample()
                 {
                     Inferences = { inferencesResponse }
@@ -111,11 +114,24 @@ namespace GrpcExtension
                 imageBatch.Clear();
                 messageCount = 1;
             }
+
+            clientState.Dispose();
         }
 
-        private Image GetImageFromContent(ReadOnlyMemory<byte> content)
+        private Image GetImageFromContent(ReadOnlyMemory<byte> content, int width, int height)
         {
-            return Image.FromStream(new MemoryStream(content.ToArray()));
+            var imageBytes = content.ToArray();
+            var region = new System.Drawing.Rectangle(0, 0, width, height);
+            var bitmap = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+            BitmapData bitmapData = bitmap.LockBits(region, ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+
+            var length = Math.Abs(bitmapData.Stride) * height;
+
+            Marshal.Copy(imageBytes, 0, bitmapData.Scan0, length);
+
+            bitmap.UnlockBits(bitmapData);
+
+            return bitmap;
         }
 
         private static void NormalizeInference(Inference inference)
@@ -152,7 +168,7 @@ namespace GrpcExtension
         /// </summary>
         /// <param name="mediaStreamDescriptor">Media session preamble.</param>
         /// <returns>Preamble response.</returns>
-        public MediaStreamDescriptor ProcessMediaStreamDescriptor(MediaStreamDescriptor mediaStreamDescriptor)
+        public MediaStreamDescriptor ProcessMediaStreamDescriptor(MediaStreamDescriptor mediaStreamDescriptor, StreamState clientState)
         {
             // Setup data transfer
             switch (mediaStreamDescriptor.DataTransferPropertiesCase)
@@ -166,12 +182,10 @@ namespace GrpcExtension
 
                     try
                     {
-                        _memoryManager = new MemoryMappedFileMemoryManager<byte>(
+                        clientState.MemoryMappedFile = new MemoryMappedFileMemoryManager<byte>(
                         memoryMappedFileProperties.HandleName,
                         (int)memoryMappedFileProperties.LengthBytes,
                         desiredAccess: MemoryMappedFileAccess.Read);
-
-                        _memory = _memoryManager.Memory;
                     }
                     catch (Exception ex)
                     {
@@ -196,22 +210,17 @@ namespace GrpcExtension
             }
 
             // Validate encoding
-            if (!_imageProcessor.IsMediaFormatSupported(mediaStreamDescriptor.MediaDescriptor, out var errorMessage))
+            if (!clientState.Processor.IsMediaFormatSupported(mediaStreamDescriptor.MediaDescriptor, out var errorMessage))
             {
                 _logger.LogInformation($"validate enconding: {errorMessage}");
                 throw new RpcException(new Status(StatusCode.OutOfRange, errorMessage));
             }
 
             // Cache the client media descriptor for this stream
-            _clientMediaDescriptor = mediaStreamDescriptor.MediaDescriptor;
+            clientState.ClientDescriptor = mediaStreamDescriptor.MediaDescriptor;
 
             // Return a empty server stream descriptor as no samples are returned (only inferences)
-            return new MediaStreamDescriptor { MediaDescriptor = new MediaDescriptor { Timescale = _clientMediaDescriptor.Timescale } };
-        }
-
-        public void Dispose()
-        {
-            ((IDisposable)_memoryManager)?.Dispose();
+            return new MediaStreamDescriptor { MediaDescriptor = new MediaDescriptor { Timescale = clientState.ClientDescriptor.Timescale } };
         }
     }
 }
