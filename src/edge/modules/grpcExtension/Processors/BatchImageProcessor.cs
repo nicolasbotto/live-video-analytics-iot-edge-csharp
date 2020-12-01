@@ -14,7 +14,7 @@ namespace GrpcExtension.Processors
 {
     /// <summary>Class <c>BatchImageProcessor</c> is responsible for processing an Image/>.
     /// </summary>
-    public class BatchImageProcessor
+    public class BatchImageProcessor : IBatchProcessor
     {
         private readonly ILogger logger;
         public BatchImageProcessor(ILogger logger)
