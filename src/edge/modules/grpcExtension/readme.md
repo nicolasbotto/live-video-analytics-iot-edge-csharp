@@ -92,7 +92,7 @@ Add a new entry to the deployment template for the gRPC module. You will need to
     * `batchSize`: the size of the batch, set batchSize=1 to run on a per frame basis
 
 ```json
-"lvaextension": {
+"lvaExtension": {
     "version": "1.0",
     "type": "docker",
     "status": "running",
