@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-using httpExtension.Models;
+using HttpExtension.Models;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Drawing;
@@ -9,7 +9,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 
-namespace httpExtension.Processors
+namespace HttpExtension.Processors
 {    
     /// <summary>Class <c>ImageProcessor</c> is responsible for processing an <paramref name="image"/>.
     /// </summary>

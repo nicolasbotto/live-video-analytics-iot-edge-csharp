@@ -1,6 +1,6 @@
 using System;
 
-namespace httpExtension.Models
+namespace HttpExtension.Models
 {
     public class InferenceResponse
     {

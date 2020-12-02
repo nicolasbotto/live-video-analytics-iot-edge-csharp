@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-using httpExtension.Processors;
+using HttpExtension.Processors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -9,7 +9,7 @@ using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace httpExtension.Controllers
+namespace HttpExtension.Controllers
 {
     [ApiController]
     [Produces("application/json")]

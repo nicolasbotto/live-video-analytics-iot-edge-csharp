@@ -1,6 +1,6 @@
 # Http Extension module
 
-The HTTP extension module enables your own IoT Edge module to accept decoded video frames as an http POST request. 
+The HTTP extension module enables your own IoT Edge module to accept video frames as an http POST request. 
 
 ## Prerequisites
 
@@ -46,7 +46,7 @@ To build the image, use the Docker file named `Dockerfile`.
 First, a couple assumptions
 
 * We'll be using Azure Container Registry (ACR) to publish our image before distributing it
-* Our local Docker container image is already loged into ACR.
+* Our local Docker container image is already logged into ACR.
 * Our hypothetical ACR name is "myregistry". Your name may defer, so please update it properly in the following commands.
 
 > If you're unfamiliar with ACR or have any questions, please follow this [demo on building and pushing an image into ACR](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli).
@@ -76,19 +76,19 @@ The topology (i.e. https://github.com/Azure/live-video-analytics/blob/master/Med
 
 * Url Parameter
 ```
-      {
-        "name": "inferencingUrl",
-        "type": "String",
-        "description": "inferencing Url",
-        "default": "https://<REPLACE-WITH-IP-OR-CONTAINER-NAME>/score"
-      },
+{
+  "name": "inferencingUrl",
+  "type": "String",
+  "description": "inferencing Url",
+  "default": "https://<REPLACE-WITH-IP-OR-CONTAINER-NAME>/score"
+}
 ```
 * Configuration
 ```
 {
-	"@apiVersion": "1.0",
-	"name": "TopologyName",
-	"properties": {
+  "@apiVersion": "1.0",
+  "name": "TopologyName",
+  "properties": {
     "processors": [
       {
         "@type": "#Microsoft.Media.MediaGraphHttpExtension",
@@ -121,28 +121,6 @@ The topology (i.e. https://github.com/Azure/live-video-analytics/blob/master/Med
   }
 }
 ```
-
-First, a couple assumptions
-
-* We'll be using Azure Container Registry (ACR) to publish our image before distributing it
-* Our local Docker is already loged into ACR.
-* Our hypothetical ACR name is "myregistry". Your may defer, so please update it properly along the following commands.
-
-> If you're unfamiliar with ACR or have any questions, please follow this [demo on building and pushing an image into ACR](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli).
-
-`cd` onto the repo's root directory
-```
-sudo docker run -d -p 8080:8080 --name httpextension myregistry.azurecr.io/httpextension:1
-
-sudo docker tag httpextension:latest myregistry.azurecr.io/httpextension:1
-
-sudo docker push myregistry.azurecr.io/httpextension:1
-```
-
-Then, from the box where the container should execute, run this command:
-
-`sudo docker run -d -p 8080:8080 --name httpextension myregistry.azurecr.io/httpextension:1`
-
 ## Using the http extension container
 
 Test the container using the following commands
@@ -152,7 +130,7 @@ Test the container using the following commands
 To get the response of the processed image, use the following command
 
 ```bash
-   curl -X POST https://<REPLACE-WITH-IP-OR-CONTAINER-NAME>/score -H "Content-Type: image/jpeg" --data-binary @<image_file_in_jpeg>
+curl -X POST https://<REPLACE-WITH-IP-OR-CONTAINER-NAME>/score -H "Content-Type: image/jpeg" --data-binary @<image_file_in_jpeg>
 ```
 
 If successful, you will see JSON printed on your screen that looks something like this
@@ -175,8 +153,8 @@ If successful, you will see JSON printed on your screen that looks something lik
 Terminate the container using the following Docker commands
 
 ```bash
-  docker stop httpextension
-  docker rm httpextension
+docker stop httpextension
+docker rm httpextension
 ```
 
 ## Upload Docker image to Azure container registry
