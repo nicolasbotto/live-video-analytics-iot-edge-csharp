@@ -35,6 +35,10 @@ In addition to the modules defined in deployment.template.json, this deployment 
 
 In addition to the modules defined in deployment.template.json, this deployment manifest template includes the [yolov3 module](https://github.com/Azure/live-video-analytics/tree/master/utilities/video-analysis/yolov3-onnx). This is an IoT Edge module that runs the YoloV3 ONNX model behind an HTTP endpoint.
 
+### deployment.composite.template.json
+
+In addition to the modules defined in deployment.template.json, this deployment manifest template includes the [yolov3 module](https://github.com/Azure/live-video-analytics/tree/master/utilities/video-analysis/yolov3-onnx) and the [tinyyolov3 module](https://github.com/Azure/live-video-analytics/tree/master/utilities/video-analysis/notebooks/Yolo/tinyyolov3/tinyyolov3-grpc-icpu-onnx). This is an IoT Edge module that runs both the YoloV3 ONNX and Tiny YoloV3 ONNX models behind gRPC endpoints.
+
 ## Deployment manifest template variables
 
 The deployment manifest templates contains several variables (look for '$' symbol). The values for these variables need to be specified in a .env file that you should create in the same folder as the template files. This file should like the following
