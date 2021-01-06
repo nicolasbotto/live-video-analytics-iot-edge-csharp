@@ -12,6 +12,7 @@ namespace C2D_Console
     {
         private const string TopologyName = "CVRToAsset";
         private const string AssetNameFormat = "CVRToAsset-{0}";
+        private const string RtspSourceUrl = "rtsp://rtspsim:554/media/co-final.mkv";
 
         static async Task Main(string[] args)
         {
@@ -30,22 +31,26 @@ namespace C2D_Console
 
                 // Create graph topology
                 var graphTopologyModel = MediaGraphManager.CreateGraphTopologyModel(TopologyName);
+
+                PrintMessage($"Creating topology {TopologyName}.", ConsoleColor.Yellow);
                 var graphTopology = await amsClient.CreateOrUpdateGraphTopologyAsync(graphTopologyModel, true);
+                PrintMessage($"Topology {TopologyName} has been created.", ConsoleColor.Green);
 
                 // Create graph instance
                 string graphInstanceName, assetName;
-                var rtspSourceUrl = "rtsp://rtspsim:554/media/co-final.mkv";
 
-                graphInstanceName = assetName = string.Format(AssetNameFormat, DateTime.Now.ToUniversalTime().ToString("yyyy_MM-dd-hh-mm-ss"));
+                graphInstanceName = assetName = string.Format(AssetNameFormat, DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd-hh-mm-ss"));
 
                 // Create graph instance
                 var graphInstanceModel = MediaGraphManager.CreateGraphInstanceModel(
                               graphInstanceName,
                               TopologyName,
                               assetName, 
-                              rtspSourceUrl);
+                              RtspSourceUrl);
 
+                PrintMessage($"Creating instance {graphInstanceName}.", ConsoleColor.Yellow);
                 var graphInstance = await amsClient.CreateOrUpdateGraphInstanceAsync(graphInstanceModel, true);
+                PrintMessage($"Instance {graphInstanceName} has been created.", ConsoleColor.Green);
 
                 // Verify status
                 if (graphInstance.State != GraphInstanceState.Inactive)
@@ -54,6 +59,7 @@ namespace C2D_Console
                 }
 
                 // Activate graph instance
+                PrintMessage($"Activating instance {graphInstanceName}.", ConsoleColor.Yellow);
                 await amsClient.ActivateGraphInstanceAsync(graphInstanceName);
 
                 // Verify graph instance Active state
@@ -63,18 +69,24 @@ namespace C2D_Console
                 {
                     throw new InvalidOperationException("The graph instance is in an invalid state");
                 }
-
-                PrintMessage("The topology will now be deactivated. Press Enter to continue", ConsoleColor.Yellow);
+                PrintMessage($"Instance {graphInstanceName} has been activated.", ConsoleColor.Green);
+                PrintMessage("Press Enter to continue to deactivate instance.", ConsoleColor.Yellow);
                 Console.ReadLine();
 
                 // Deactivate instance
+                PrintMessage($"Deactivating instance {graphInstanceName}.", ConsoleColor.Yellow);
                 await amsClient.DeactivateGraphInstanceAsync(graphInstanceName);
+                PrintMessage($"Instance {graphInstanceName} has been deactivated.", ConsoleColor.Green);
 
                 // Delete instance
+                PrintMessage($"Deleting instance {graphInstanceName}.", ConsoleColor.Yellow);
                 await amsClient.DeleteGraphInstanceAsync(graphInstanceName);
+                PrintMessage($"Instance {graphInstanceName} has been deleted.", ConsoleColor.Green);
 
                 // Delete topology
+                PrintMessage($"Deleting topology {TopologyName}.", ConsoleColor.Yellow);
                 await amsClient.DeleteGraphTopologyAsync(TopologyName);
+                PrintMessage($"Topology {TopologyName} has been deleted.", ConsoleColor.Green);
             }
             catch(ApiErrorException ex)
             {
