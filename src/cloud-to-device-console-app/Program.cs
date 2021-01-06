@@ -34,39 +34,51 @@ namespace C2D_Console
 
                 // Create graph instance
                 string graphInstanceName, assetName;
-                graphInstanceName = assetName = string.Format(AssetNameFormat, DateTime.Now.ToUniversalTime().ToString("yyyy_MM_dd_hh_mm_ss"));
+                var rtspSourceUrl = "rtsp://rtspsim:554/media/co-final.mkv";
 
-                // Create grapth instance
+                graphInstanceName = assetName = string.Format(AssetNameFormat, DateTime.Now.ToUniversalTime().ToString("yyyy_MM-dd-hh-mm-ss"));
+
+                // Create graph instance
                 var graphInstanceModel = MediaGraphManager.CreateGraphInstanceModel(
                               graphInstanceName,
                               TopologyName,
-                              assetName);
+                              assetName, 
+                              rtspSourceUrl);
 
                 var graphInstance = await amsClient.CreateOrUpdateGraphInstanceAsync(graphInstanceModel, true);
 
                 // Verify status
                 if (graphInstance.State != GraphInstanceState.Inactive)
                 {
-                    PrintMessage("The graph instance is in an invalid state", ConsoleColor.Red);
+                    throw new InvalidOperationException("The graph instance is in an invalid state");
                 }
 
                 // Activate graph instance
                 await amsClient.ActivateGraphInstanceAsync(graphInstanceName);
 
                 // Verify graph instance Active state
-                if (graphInstance.State != GraphInstanceState.Activating)
+                graphInstance = await amsClient.GetGraphInstanceAsync(graphInstanceName);
+                
+                if (graphInstance.State != GraphInstanceState.Active)
                 {
-                    PrintMessage("The graph instance is in an invalid state", ConsoleColor.Red);
+                    throw new InvalidOperationException("The graph instance is in an invalid state");
                 }
 
                 PrintMessage("The topology will now be deactivated. Press Enter to continue", ConsoleColor.Yellow);
                 Console.ReadLine();
 
-                // Deactivate topology
+                // Deactivate instance
                 await amsClient.DeactivateGraphInstanceAsync(graphInstanceName);
+
+                // Delete instance
+                await amsClient.DeleteGraphInstanceAsync(graphInstanceName);
 
                 // Delete topology
                 await amsClient.DeleteGraphTopologyAsync(TopologyName);
+            }
+            catch(ApiErrorException ex)
+            {
+                PrintMessage($"Error executing client: {ex.Body.Error.Message}", ConsoleColor.Red);
             }
             catch (Exception ex)
             {

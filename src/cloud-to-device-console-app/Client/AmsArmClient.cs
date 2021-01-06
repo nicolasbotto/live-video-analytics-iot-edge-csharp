@@ -47,7 +47,8 @@ namespace C2D_Console.Client
             LvaAzureMediaServicesClient amsLvaClient,
             string resourceGroupName,
             string accountName,
-            string accountRegion)
+            string accountRegion, 
+            Uri amsMediaServiceBaseUri)
         {
             Check.NotNull(amsClient, nameof(amsClient));
             Check.NotNull(amsLvaClient, nameof(amsLvaClient));
@@ -61,6 +62,9 @@ namespace C2D_Console.Client
             _accountName = accountName;
             _graphTopologyNamesTrackedForCleanup = new ConcurrentBag<string>();
             _graphInstanceNamesTrackedForCleanup = new ConcurrentBag<string>();
+
+            _amsClient.BaseUri = amsMediaServiceBaseUri;
+            _amsLvaClient.BaseUri = amsMediaServiceBaseUri;
         }
 
 

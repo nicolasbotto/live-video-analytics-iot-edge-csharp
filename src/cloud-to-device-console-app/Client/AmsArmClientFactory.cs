@@ -66,7 +66,8 @@ namespace C2D_Console.Client
                 amsLvaClient,
                 configuration.AmsAccountResourceGroupName,
                 configuration.AmsAccountName,
-                configuration.AmsAccountRegion);
+                configuration.AmsAccountRegion, 
+                configuration.AmsMediaServiceBaseUri);
         }
     }
 }

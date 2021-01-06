@@ -4,9 +4,8 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
+using Microsoft.Azure.Management.Media.LvaDev.Models;
 using System.Collections.Generic;
-using LvaDevModels = Microsoft.Azure.Management.Media.LvaDev.Models;
 
 namespace C2D_Console.Helpers
 {
@@ -24,25 +23,23 @@ namespace C2D_Console.Helpers
         private const string RtspPasswordParameterName = "rtspPasswordParameter";
         private const string RtspUsernameParameterName = "rtspUsernameParameter";
 
-        private const string RtspSourceUrlAbsoluteUri = "";
-
         /// <summary>
         /// Create graph topology model.
         /// </summary>
         /// <param name="graphTopologyName">Graph topology name.</param>
         /// <returns>GraphTopology model.</returns>
-        public static LvaDevModels.GraphTopology CreateGraphTopologyModel(string graphTopologyName)
+        public static GraphTopology CreateGraphTopologyModel(string graphTopologyName)
         {
             return new GraphTopologyModelBuilder(graphTopologyName, GraphTopologyDescription)
                .AddSource(
-                    new LvaDevModels.MediaGraphRtspSource
+                    new MediaGraphRtspSource
                     {
                         Name = RtspSource,
                         Transport = "tcp",
-                        Endpoint = new LvaDevModels.MediaGraphUnsecuredEndpoint
+                        Endpoint = new MediaGraphUnsecuredEndpoint
                         {
                             Url = "${" + RtspUrlParameterName + "}",
-                            Credentials = new LvaDevModels.MediaGraphUsernamePasswordCredentials
+                            Credentials = new MediaGraphUsernamePasswordCredentials
                             {
                                 Username = RtspUsernameParameterName,
                                 Password = "${" + RtspPasswordParameterName + "}",
@@ -50,39 +47,39 @@ namespace C2D_Console.Helpers
                         },
                     })
                .AddSink(
-                    new LvaDevModels.MediaGraphAssetSink
+                    new MediaGraphAssetSink
                     {
                         Name = "AssetSink",
                         AssetNamePattern = "${" + AssetNameParameterName + "}",
-                        Inputs = new List<LvaDevModels.NodeInput>
+                        Inputs = new List<NodeInput>
                     {
-                        new LvaDevModels.NodeInput
+                        new NodeInput
                         {
                             NodeName = RtspSource,
                         },
                     },
                     })
                .AddParameters(
-                    new List<LvaDevModels.ParameterDeclaration>
+                    new List<ParameterDeclaration>
                     {
-                        new LvaDevModels.ParameterDeclaration
+                        new ParameterDeclaration
                         {
                             Name = AssetNameParameterName,
-                            Type = LvaDevModels.ParameterDeclarationType.String,
+                            Type = ParameterDeclarationType.String,
                             DefaultProperty = "defaultAsset",
                             Description = "asset name parameter",
                         },
-                        new LvaDevModels.ParameterDeclaration
+                        new ParameterDeclaration
                         {
                             Name = RtspPasswordParameterName,
-                            Type = LvaDevModels.ParameterDeclarationType.SecretString,
+                            Type = ParameterDeclarationType.SecretString,
                             DefaultProperty = "defaultPassword",
                             Description = "rtsp password parameter",
                         },
-                        new LvaDevModels.ParameterDeclaration
+                        new ParameterDeclaration
                         {
                             Name = RtspUrlParameterName,
-                            Type = LvaDevModels.ParameterDeclarationType.String,
+                            Type = ParameterDeclarationType.String,
                             DefaultProperty = "rtsp://microsoft.com/defaultUrl",
                             Description = "rtsp url parameter",
                         },
@@ -97,30 +94,32 @@ namespace C2D_Console.Helpers
         /// <param name="graphInstanceName">Graph instance name.</param>
         /// <param name="graphTopologyName">Graph topology name.</param>
         /// <param name="assetName">Asset name.</param>
+        /// <param name="rtspSourceUrl">Rtsp source URL.</param>
         /// <returns>GraphInstance model.</returns>
-        public static LvaDevModels.GraphInstance CreateGraphInstanceModel(
+        public static GraphInstance CreateGraphInstanceModel(
             string graphInstanceName,
             string graphTopologyName,
-            string assetName)
+            string assetName,
+            string rtspSourceUrl)
         {
             return new GraphInstanceModelBuilder(graphTopologyName, graphInstanceName, GraphInstanceDescription)
                 .AddParameters(
-                    new List<LvaDevModels.ParameterDefinition>
+                    new List<ParameterDefinition>
                     {
-                        new LvaDevModels.ParameterDefinition
+                        new ParameterDefinition
                         {
                             Name = AssetNameParameterName,
                             Value = assetName,
                         },
-                        new LvaDevModels.ParameterDefinition
+                        new ParameterDefinition
                         {
                             Name = RtspPasswordParameterName,
                             Value = "password",
                         },
-                        new LvaDevModels.ParameterDefinition
+                        new ParameterDefinition
                         {
                             Name = RtspUrlParameterName,
-                            Value = RtspSourceUrlAbsoluteUri,
+                            Value = rtspSourceUrl,
                         },
                     })
                 .GraphInstance;
