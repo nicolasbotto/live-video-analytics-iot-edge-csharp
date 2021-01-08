@@ -11,6 +11,11 @@ This file is a deployment manifest template that has the following modules defin
 * rtspsim - [RTSP simulator module](https://github.com/Azure/live-video-analytics/tree/master/utilities/rtspsim-live555)
 * lvaEdge - Live Video Analytics on IoT Edge module
 
+
+### deployment.grpc.template.json  
+
+In addition to the modules defined in deployment.template.json, this deployment manifest template includes your [grpcExtension module](https://github.com/Azure-Samples/live-video-analytics-iot-edge-csharp/tree/master/src/edge/modules/grpcExtension). This IoT Edge module runs your custom AI behind a gRPC endpoint. 
+
 ### deployment.customvision.template.json
 
 In addition to the modules defined in deployment.template.json, this deployment manifest template includes the toy truck detector model built using [Custom vision](https://www.customvision.ai/). This is an IoT Edge module that runs the Custom Vision model behind an HTTP endpoint.This template is used in [this](https://docs.microsoft.com/en-us/azure/media-services/live-video-analytics-edge/custom-vision-tutorial) tutorial that gives you training data for the toy truck detector custom vision model and outlines instructions on training the model, uploading to your own Azure container registry and deploying it to the edge. 
