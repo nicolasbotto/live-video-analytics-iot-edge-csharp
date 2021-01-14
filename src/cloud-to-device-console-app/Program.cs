@@ -10,7 +10,7 @@ namespace C2D_Console
 {
     class Program
     {
-        private const string TopologyName = "CVRToAsset";
+        private const string TopologyName = "CVRToAssetTunnel";
         private const string AssetNameFormat = "CVRToAsset-{0}";
         private const string RtspSourceUrl = "rtsp://rtspsim:554/media/co-final.mkv";
 
@@ -46,7 +46,9 @@ namespace C2D_Console
                               graphInstanceName,
                               TopologyName,
                               assetName, 
-                              RtspSourceUrl);
+                              RtspSourceUrl,
+                              clientConfig.IoTHubArmId,
+                              "Camera01");
 
                 PrintMessage($"Creating instance {graphInstanceName}.", ConsoleColor.Yellow);
                 var graphInstance = await amsClient.CreateOrUpdateGraphInstanceAsync(graphInstanceModel, true);

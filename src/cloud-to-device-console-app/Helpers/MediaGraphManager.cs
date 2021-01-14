@@ -22,6 +22,8 @@ namespace C2D_Console.Helpers
         private const string RtspUrlParameterName = "rtspUrlParameter";
         private const string RtspPasswordParameterName = "rtspPasswordParameter";
         private const string RtspUsernameParameterName = "rtspUsernameParameter";
+        private const string RtspIoTHubArmIdName = "rtspIoTHubArmIdParameter";
+        private const string RtspDeviceIdName = "rtspDeviceIdParameter";
 
         /// <summary>
         /// Create graph topology model.
@@ -44,6 +46,7 @@ namespace C2D_Console.Helpers
                                 Username = RtspUsernameParameterName,
                                 Password = "${" + RtspPasswordParameterName + "}",
                             },
+                            Tunnel = new MediaGraphIoTSecureDeviceRemoteTunnel("${" + RtspIoTHubArmIdName + "}", "${" + RtspDeviceIdName  + "}")
                         },
                     })
                .AddSink(
@@ -83,6 +86,18 @@ namespace C2D_Console.Helpers
                             DefaultProperty = "rtsp://microsoft.com/defaultUrl",
                             Description = "rtsp url parameter",
                         },
+                        new ParameterDeclaration
+                        {
+                            Name = RtspIoTHubArmIdName,
+                            Type = ParameterDeclarationType.String,
+                            Description = "rtsp iot hub arm id",
+                        },
+                        new ParameterDeclaration
+                        {
+                            Name = RtspDeviceIdName,
+                            Type = ParameterDeclarationType.String,
+                            Description = "rtsp device id",
+                        }
                     })
                .Graph;
         }
@@ -95,12 +110,16 @@ namespace C2D_Console.Helpers
         /// <param name="graphTopologyName">Graph topology name.</param>
         /// <param name="assetName">Asset name.</param>
         /// <param name="rtspSourceUrl">Rtsp source URL.</param>
+        /// <param name="rtspIotHubArmId">Rtsp source IoT Hub Arm ID.</param>
+        /// <param name="rtspDeviceId">Rtsp device ID.</param>
         /// <returns>GraphInstance model.</returns>
         public static GraphInstance CreateGraphInstanceModel(
             string graphInstanceName,
             string graphTopologyName,
             string assetName,
-            string rtspSourceUrl)
+            string rtspSourceUrl,
+            string rtspIotHubArmId,
+            string rtspDeviceId)
         {
             return new GraphInstanceModelBuilder(graphTopologyName, graphInstanceName, GraphInstanceDescription)
                 .AddParameters(
@@ -120,6 +139,16 @@ namespace C2D_Console.Helpers
                         {
                             Name = RtspUrlParameterName,
                             Value = rtspSourceUrl,
+                        },
+                        new ParameterDefinition
+                        {
+                            Name = RtspIoTHubArmIdName,
+                            Value = rtspIotHubArmId,
+                        },
+                        new ParameterDefinition
+                        {
+                            Name = RtspDeviceIdName,
+                            Value = rtspDeviceId,
                         },
                     })
                 .GraphInstance;

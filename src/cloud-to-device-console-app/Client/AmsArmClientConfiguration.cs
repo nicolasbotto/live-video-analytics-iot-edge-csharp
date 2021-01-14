@@ -62,5 +62,10 @@ namespace C2D_Console.Client
         ///The media service base uri.
         /// </summary>
         public Uri AmsMediaServiceBaseUri { get; set; }
+
+        /// <summary>
+        /// The IoT Hub Arm Id
+        /// </summary>
+        public string IoTHubArmId { get; set; }
     }
 }
