@@ -3,6 +3,7 @@ using C2D_Console.Helpers;
 using Microsoft.Azure.Management.Media.LvaDev.Models;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -10,9 +11,9 @@ namespace C2D_Console
 {
     class Program
     {
-        private const string TopologyName = "CVRToAssetTunnel";
-        private const string AssetNameFormat = "CVRToAsset-{0}";
-        private const string RtspSourceUrl = "rtsp://rtspsim:554/media/co-final.mkv";
+        private const string TopologyName = "CVRToAsset";
+        private const string AssetNameFormat = "CVRToAsset-{0}-{1}";
+        private const string RtspSourceUrl = "rtsp://rtspsim:554/media/camera-300s.mkv";
 
         static async Task Main(string[] args)
         {
@@ -36,54 +37,77 @@ namespace C2D_Console
                 var graphTopology = await amsClient.CreateOrUpdateGraphTopologyAsync(graphTopologyModel, true);
                 PrintMessage($"Topology {TopologyName} has been created.", ConsoleColor.Green);
 
-                // Create graph instance
-                string graphInstanceName, assetName;
-
-                graphInstanceName = assetName = string.Format(AssetNameFormat, DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd-hh-mm-ss"));
-
-                // Create graph instance
-                var graphInstanceModel = MediaGraphManager.CreateGraphInstanceModel(
-                              graphInstanceName,
-                              TopologyName,
-                              assetName, 
-                              RtspSourceUrl,
-                              clientConfig.IoTHubArmId,
-                              "Camera01");
-
-                PrintMessage($"Creating instance {graphInstanceName}.", ConsoleColor.Yellow);
-                var graphInstance = await amsClient.CreateOrUpdateGraphInstanceAsync(graphInstanceModel, true);
-                PrintMessage($"Instance {graphInstanceName} has been created.", ConsoleColor.Green);
-
-                // Verify status
-                if (graphInstance.State != GraphInstanceState.Inactive)
+                PrintMessage("Enter the number of graph instances to create:", ConsoleColor.Yellow);
+                int option;
+                string input = Console.ReadLine();
+                while (!int.TryParse(input, out option))
                 {
-                    throw new InvalidOperationException("The graph instance is in an invalid state");
+                    PrintMessage("Not a valid option, try again...", ConsoleColor.Red);
+                    input = Console.ReadLine();
                 }
 
-                // Activate graph instance
-                PrintMessage($"Activating instance {graphInstanceName}.", ConsoleColor.Yellow);
-                await amsClient.ActivateGraphInstanceAsync(graphInstanceName);
+                List<GraphInstance> graphInstances = new List<GraphInstance>();
 
-                // Verify graph instance Active state
-                graphInstance = await amsClient.GetGraphInstanceAsync(graphInstanceName);
-                
-                if (graphInstance.State != GraphInstanceState.Active)
+                for (int i = 0; i < option; i++)
                 {
-                    throw new InvalidOperationException("The graph instance is in an invalid state");
+                    // Create graph instance
+                    string graphInstanceName, assetName;
+
+                    graphInstanceName = assetName = string.Format(AssetNameFormat, DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd-hh-mm-ss"), i);
+
+                    PrintMessage("Enter the device id:", ConsoleColor.Yellow);
+                    var deviceId = Console.ReadLine();
+
+                    // Create graph instance
+                    var graphInstanceModel = MediaGraphManager.CreateGraphInstanceModel(
+                                  graphInstanceName,
+                                  TopologyName,
+                                  assetName,
+                                  RtspSourceUrl,
+                                  clientConfig.IoTHubArmId,
+                                  deviceId);
+
+                    PrintMessage($"Creating instance {graphInstanceName}.", ConsoleColor.Yellow);
+                    var graphInstance = await amsClient.CreateOrUpdateGraphInstanceAsync(graphInstanceModel, true);
+                    PrintMessage($"Instance {graphInstanceName} has been created.", ConsoleColor.Green);
+
+                    // Verify status
+                    if (graphInstance.State != GraphInstanceState.Inactive)
+                    {
+                        throw new InvalidOperationException("The graph instance is in an invalid state");
+                    }
+
+                    graphInstances.Add(graphInstance);
                 }
-                PrintMessage($"Instance {graphInstanceName} has been activated.", ConsoleColor.Green);
-                PrintMessage("Press Enter to continue to deactivate instance.", ConsoleColor.Yellow);
-                Console.ReadLine();
 
-                // Deactivate instance
-                PrintMessage($"Deactivating instance {graphInstanceName}.", ConsoleColor.Yellow);
-                await amsClient.DeactivateGraphInstanceAsync(graphInstanceName);
-                PrintMessage($"Instance {graphInstanceName} has been deactivated.", ConsoleColor.Green);
+                foreach (var graphInstance in graphInstances)
+                {
+                    var graphInstanceName = graphInstance.Name;
+                    // Activate graph instance
+                    PrintMessage($"Activating instance {graphInstanceName}.", ConsoleColor.Yellow);
+                    await amsClient.ActivateGraphInstanceAsync(graphInstanceName);
 
-                // Delete instance
-                PrintMessage($"Deleting instance {graphInstanceName}.", ConsoleColor.Yellow);
-                await amsClient.DeleteGraphInstanceAsync(graphInstanceName);
-                PrintMessage($"Instance {graphInstanceName} has been deleted.", ConsoleColor.Green);
+                    // Verify graph instance Active state
+                    var refreshedGraphInstance = await amsClient.GetGraphInstanceAsync(graphInstanceName);
+
+                    if (refreshedGraphInstance.State != GraphInstanceState.Active)
+                    {
+                        throw new InvalidOperationException("The graph instance is in an invalid state");
+                    }
+                    PrintMessage($"Instance {graphInstanceName} has been activated.", ConsoleColor.Green);
+                    PrintMessage("Press Enter to continue to deactivate instance.", ConsoleColor.Yellow);
+                    Console.ReadLine();
+
+                    // Deactivate instance
+                    PrintMessage($"Deactivating instance {graphInstanceName}.", ConsoleColor.Yellow);
+                    await amsClient.DeactivateGraphInstanceAsync(graphInstanceName);
+                    PrintMessage($"Instance {graphInstanceName} has been deactivated.", ConsoleColor.Green);
+
+                    // Delete instance
+                    PrintMessage($"Deleting instance {graphInstanceName}.", ConsoleColor.Yellow);
+                    await amsClient.DeleteGraphInstanceAsync(graphInstanceName);
+                    PrintMessage($"Instance {graphInstanceName} has been deleted.", ConsoleColor.Green);
+                }
 
                 // Delete topology
                 PrintMessage($"Deleting topology {TopologyName}.", ConsoleColor.Yellow);
