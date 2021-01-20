@@ -6,20 +6,8 @@
             "opParams": {}
         },
         {
-            "opName": "WaitForInput",
-            "opParams": {
-                "message": "Press Enter to continue"
-            }
-        },
-        {
             "opName": "GraphInstanceList",
             "opParams": {}
-        },
-        {
-            "opName": "WaitForInput",
-            "opParams": {
-                "message": "Press Enter to continue"
-            }
         },
         {
             "opName": "GraphTopologySet",
@@ -30,7 +18,7 @@
         {
             "opName": "GraphInstanceSet",
             "opParams": {
-                "name": "Sample-Graph-1",
+                "name": "SampleGraph1",
                 "properties": {
                     "topologyName": "InferencingWithGrpcExtension",
                     "description": "Sample graph description",
@@ -46,7 +34,11 @@
                         {
                             "name": "rtspPassword",
                             "value": "testpassword"
-                        }
+                        },
+                        {
+                            "name" : "inferencingUrl",
+                            "value" : "http://lvaExtension:8080/score"
+                        }                  
                     ]
                 }
             }
@@ -54,7 +46,7 @@
         {
             "opName": "GraphInstanceActivate",
             "opParams": {
-                "name": "Sample-Graph-1"
+                "name": "SampleGraph1"
             }
         },
         {
@@ -70,13 +62,13 @@
         {
             "opName": "GraphInstanceDeactivate",
             "opParams": {
-                "name": "Sample-Graph-1"
+                "name": "SampleGraph1"
             }
         },
         {
             "opName": "GraphInstanceDelete",
             "opParams": {
-                "name": "Sample-Graph-1"
+                "name": "SampleGraph1"
             }
         },
         {
@@ -84,32 +76,15 @@
             "opParams": {}
         },
         {
-            "opName": "WaitForInput",
-            "opParams": {
-                "message": "Press Enter to continue"
-            }
-        },
-        {
             "opName": "GraphTopologyDelete",
             "opParams": {
                 "name": "InferencingWithGrpcExtension"
             }
         },
-        {
-            "opName": "WaitForInput",
-            "opParams": {
-                "message": "Press Enter to continue"
-            }
-        },
+
         {
             "opName": "GraphTopologyList",
             "opParams": {}
-        },
-        {
-            "opName": "WaitForInput",
-            "opParams": {
-                "message": "Press Enter to continue"
-            }
         }
     ]
 }
