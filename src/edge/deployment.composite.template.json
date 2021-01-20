@@ -71,24 +71,38 @@
                   "Binds": [
                     "$OUTPUT_VIDEO_FOLDER_ON_DEVICE:/var/media/",
                     "$APPDATA_FOLDER_ON_DEVICE:/var/lib/azuremediaservices"
-                  ]
+                  ],
+                  "IpcMode": "host"
                 }
               }
             }
           },
-          "openvino": {
+          "yolov3": {
             "version": "1.0",
             "type": "docker",
             "status": "running",
             "restartPolicy": "always",
             "settings": {
-              "image": "marketplace.azurecr.io/intel_corporation/open_vino:latest",
-              "createOptions": {
-                "ExposedPorts": {
-                  "4000/tcp": {}
-                },
-                "Cmd": ["/ams_wrapper/start_ams.py","--ams_port=4000","--ovms_port=9000"]
-              }
+                "image": "mcr.microsoft.com/lva-utilities/lvaextension:grpc-yolov3-onnx-v1.0",
+                "createOptions": {
+                    "HostConfig": {                                  
+                        "IpcMode": "host"        
+                    }
+                }
+            }
+          },
+          "tinyyolov3": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+                "image": "mcr.microsoft.com/lva-utilities/lvaextension:grpc-yolov3-tiny-onnx-v1.0",
+                "createOptions": {
+                    "HostConfig": {                                  
+                        "IpcMode": "host"        
+                    }
+                }
             }
           },
           "rtspsim": {

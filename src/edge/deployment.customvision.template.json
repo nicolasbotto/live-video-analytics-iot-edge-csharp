@@ -10,6 +10,11 @@
             "minDockerVersion": "v1.25",
             "loggingOptions": "",
             "registryCredentials": {
+              "$CONTAINER_REGISTRY_USERNAME_myacr": {
+                "username": "$CONTAINER_REGISTRY_USERNAME_myacr",
+                "password": "$CONTAINER_REGISTRY_PASSWORD_myacr",
+                "address": "$CONTAINER_REGISTRY_USERNAME_myacr.azurecr.io"
+              }
 
             }
           }
@@ -77,16 +82,18 @@
               }
             }
           },
-          "yolov3": {
+
+          "cv": {
             "version": "1.0",
             "type": "docker",
             "status": "running",
             "restartPolicy": "always",
             "settings": {
-              "image": "mcr.microsoft.com/lva-utilities/yolov3-onnx:1.0",
-              "createOptions": {}
+              "image": "$CONTAINER_REGISTRY_USERNAME_myacr.azurecr.io/cvtruck:latest",
+              "createOptions": "{}"
             }
           },
+
           "rtspsim": {
             "version": "1.0",
             "type": "docker",
@@ -128,7 +135,7 @@
         "aadResourceId": "https://management.core.windows.net/",
         "armEndpoint": "https://management.azure.com/",
         "diagnosticsEventsOutputName": "AmsDiagnostics",
-        "operationalEventsOutputName": "AmsOperational",
+        "operationalEventsOutputName": "AmsOperational",        
         "logLevel": "Information",
         "logCategories": "Application,Events",
         "allowUnsecuredEndpoints": true,

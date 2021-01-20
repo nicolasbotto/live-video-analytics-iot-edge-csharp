@@ -20,7 +20,7 @@
             "opParams": {
                 "name": "SampleGraph1",
                 "properties": {
-                    "topologyName": "MotionDetection",
+                    "topologyName": "InferencingWithGrpcExtension",
                     "description": "Sample graph description",
                     "parameters": [
                         {
@@ -78,7 +78,7 @@
         {
             "opName": "GraphTopologyDelete",
             "opParams": {
-                "name": "MotionDetection"
+                "name": "InferencingWithGrpcExtension"
             }
         },
 
