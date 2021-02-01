@@ -6,8 +6,20 @@
             "opParams": {}
         },
         {
+            "opName": "WaitForInput",
+            "opParams": {
+                "message": "Press Enter to continue"
+            }
+        },
+        {
             "opName": "GraphInstanceList",
             "opParams": {}
+        },
+        {
+            "opName": "WaitForInput",
+            "opParams": {
+                "message": "Press Enter to continue"
+            }
         },
         {
             "opName": "GraphTopologySet",
@@ -18,7 +30,7 @@
         {
             "opName": "GraphInstanceSet",
             "opParams": {
-                "name": "SampleGraph1",
+                "name": "Sample-Graph-1",
                 "properties": {
                     "topologyName": "MotionDetection",
                     "description": "Sample graph description",
@@ -34,11 +46,7 @@
                         {
                             "name": "rtspPassword",
                             "value": "testpassword"
-                        },
-                        {
-                            "name" : "inferencingUrl",
-                            "value" : "http://lvaExtension:8080/score"
-                        }                  
+                        }
                     ]
                 }
             }
@@ -46,7 +54,7 @@
         {
             "opName": "GraphInstanceActivate",
             "opParams": {
-                "name": "SampleGraph1"
+                "name": "Sample-Graph-1"
             }
         },
         {
@@ -56,19 +64,19 @@
         {
             "opName": "WaitForInput",
             "opParams": {
-                "message": "The topology will now be deactivated. Press Enter to continue"
+                "message": "The graph instance has been activated. Press Enter to continue and deactivate the graph instance."
             }
         },
         {
             "opName": "GraphInstanceDeactivate",
             "opParams": {
-                "name": "SampleGraph1"
+                "name": "Sample-Graph-1"
             }
         },
         {
             "opName": "GraphInstanceDelete",
             "opParams": {
-                "name": "SampleGraph1"
+                "name": "Sample-Graph-1"
             }
         },
         {
@@ -76,15 +84,32 @@
             "opParams": {}
         },
         {
+            "opName": "WaitForInput",
+            "opParams": {
+                "message": "Press Enter to continue"
+            }
+        },
+        {
             "opName": "GraphTopologyDelete",
             "opParams": {
                 "name": "MotionDetection"
             }
         },
-
+        {
+            "opName": "WaitForInput",
+            "opParams": {
+                "message": "Press Enter to continue"
+            }
+        },
         {
             "opName": "GraphTopologyList",
             "opParams": {}
+        },
+        {
+            "opName": "WaitForInput",
+            "opParams": {
+                "message": "Press Enter to continue"
+            }
         }
     ]
 }
