@@ -67,5 +67,15 @@ namespace C2D_Console.Client
         /// The IoT Hub Arm Id
         /// </summary>
         public string IoTHubArmId { get; set; }
+
+        /// <summary>
+        /// The audience
+        /// </summary>
+        public string Audience { get; set; }
+
+        /// <summary>
+        /// The issuer
+        /// </summary>
+        public string Issuer { get; set; }
     }
 }

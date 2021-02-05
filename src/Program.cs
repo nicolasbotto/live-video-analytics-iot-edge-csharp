@@ -2,6 +2,7 @@
 using C2D_Console.Helpers;
 using Microsoft.Azure.Management.Media.LvaDev.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Media.LiveVideoAnalytics.GraphTopologyCryptoProvider;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,11 +28,14 @@ namespace C2D_Console
 
                 var clientConfig = appSettings.GetSection("AmsArmClient").Get<AmsArmClientConfiguration>();
 
+                var cryptoProvider = GraphTopologyCryptoProviderFactory.CreateAsymmetricCryptoProvider();
+                var token = cryptoProvider.GetJwtToken(clientConfig.Audience, clientConfig.Issuer, new Guid(clientConfig.AmsClientAadClientId));
+
                 // Initialize the client
                 using var amsClient = await AmsArmClientFactory.CreateAsync(clientConfig);
 
                 // Create graph topology
-                var graphTopologyModel = MediaGraphManager.CreateGraphTopologyModel(TopologyName);
+                var graphTopologyModel = MediaGraphManager.CreatePlaybackGraphTopologyModel(TopologyName, clientConfig.Audience, clientConfig.Issuer, cryptoProvider.Modulus, cryptoProvider.Exponent);
 
                 PrintMessage($"Creating topology {TopologyName}.", ConsoleColor.Yellow);
                 var graphTopology = await amsClient.CreateOrUpdateGraphTopologyAsync(graphTopologyModel, true);
@@ -45,7 +49,7 @@ namespace C2D_Console
                     PrintMessage("Not a valid option, try again...", ConsoleColor.Red);
                     input = Console.ReadLine();
                 }
-
+                
                 List<GraphInstance> graphInstances = new List<GraphInstance>();
 
                 for (int i = 0; i < option; i++)

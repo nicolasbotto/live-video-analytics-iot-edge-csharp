@@ -5,7 +5,9 @@
 //-----------------------------------------------------------------------
 
 using Microsoft.Azure.Management.Media.LvaDev.Models;
+using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace C2D_Console.Helpers
 {
@@ -46,7 +48,7 @@ namespace C2D_Console.Helpers
                                 Username = RtspUsernameParameterName,
                                 Password = "${" + RtspPasswordParameterName + "}",
                             },
-                            Tunnel = new MediaGraphIoTSecureDeviceRemoteTunnel("${" + RtspIoTHubArmIdName + "}", "${" + RtspDeviceIdName  + "}")
+                            Tunnel = new MediaGraphIoTSecureDeviceRemoteTunnel("${" + RtspIoTHubArmIdName + "}", "${" + RtspDeviceIdName + "}")
                         },
                     })
                .AddSink(
@@ -61,6 +63,120 @@ namespace C2D_Console.Helpers
                             NodeName = RtspSource,
                         },
                     },
+                    })
+               .AddParameters(
+                    new List<ParameterDeclaration>
+                    {
+                        new ParameterDeclaration
+                        {
+                            Name = AssetNameParameterName,
+                            Type = ParameterDeclarationType.String,
+                            DefaultProperty = "defaultAsset",
+                            Description = "asset name parameter",
+                        },
+                        new ParameterDeclaration
+                        {
+                            Name = RtspPasswordParameterName,
+                            Type = ParameterDeclarationType.SecretString,
+                            DefaultProperty = "defaultPassword",
+                            Description = "rtsp password parameter",
+                        },
+                        new ParameterDeclaration
+                        {
+                            Name = RtspUrlParameterName,
+                            Type = ParameterDeclarationType.String,
+                            DefaultProperty = "rtsp://microsoft.com/defaultUrl",
+                            Description = "rtsp url parameter",
+                        },
+                        new ParameterDeclaration
+                        {
+                            Name = RtspIoTHubArmIdName,
+                            Type = ParameterDeclarationType.String,
+                            Description = "rtsp iot hub arm id",
+                        },
+                        new ParameterDeclaration
+                        {
+                            Name = RtspDeviceIdName,
+                            Type = ParameterDeclarationType.String,
+                            Description = "rtsp device id",
+                        }
+                    })
+               .Graph;
+        }
+
+        /// <summary>
+        /// Create graph topology model.
+        /// </summary>
+        /// <param name="graphTopologyName">Graph topology name.</param>
+        /// <returns>GraphTopology model.</returns>
+        public static GraphTopology CreatePlaybackGraphTopologyModel(string graphTopologyName, string audience, string issuer, string modulus, string exponent)
+        {
+            return new GraphTopologyModelBuilder(graphTopologyName, GraphTopologyDescription)
+               .AddSource(
+                    new MediaGraphRtspSource
+                    {
+                        Name = RtspSource,
+                        Transport = "tcp",
+                        Endpoint = new MediaGraphUnsecuredEndpoint
+                        {
+                            Url = "${" + RtspUrlParameterName + "}",
+                            Credentials = new MediaGraphUsernamePasswordCredentials
+                            {
+                                Username = RtspUsernameParameterName,
+                                Password = "${" + RtspPasswordParameterName + "}",
+                            },
+                            Tunnel = new MediaGraphIoTSecureDeviceRemoteTunnel("${" + RtspIoTHubArmIdName + "}", "${" + RtspDeviceIdName + "}")
+                        },
+                    })
+               .AddSinks(
+                    new List<SinkNodeBase> {
+                        new MediaGraphAssetSink
+                        {
+                            Name = "AssetSink",
+                            AssetNamePattern = "${" + AssetNameParameterName + "}",
+                            Inputs = new List<NodeInput>
+                            {
+                                new NodeInput
+                                {
+                                    NodeName = RtspSource,
+                                },
+                            },
+                        },
+                       new MediaGraphRtspServerSink
+                       {
+                           Name = "rtspServerSink",
+                           Inputs = new List<NodeInput>
+                           {
+                                new NodeInput
+                                {
+                                    NodeName = RtspSource
+                                },
+                           },
+                           Endpoint = new MediaGraphUnsecuredServerEndpoint
+                           {
+                               Tunnel = new MediaGraphTlsWebSocketTunnel
+                               {
+                                   AuthorizationProvider = new MediaGraphJwtTokenAuthorizationProvider
+                                   {
+                                       Audience = audience,
+                                       Issuer = issuer,
+                                       //IgnoreResource = "false",
+                                       VerificationKeys = new List<MediaGraphCredentials> {
+                                                new ContentKeyPolicyRsaTokenKey()
+                                                {
+                                                    Exponent = exponent,
+                                                    Modulus = modulus
+                                                }
+                                            }
+                                   },
+                               },
+                               Url = "http://test.com", // dummy url
+                               Credentials = new MediaGraphJwtSymmetricTokenKey // dummy placeholder
+                               {
+                                   Key = "test",
+                               },
+                           }
+                       }
                     })
                .AddParameters(
                     new List<ParameterDeclaration>

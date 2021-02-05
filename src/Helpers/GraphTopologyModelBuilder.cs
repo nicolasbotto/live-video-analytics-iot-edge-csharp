@@ -68,6 +68,21 @@ namespace C2D_Console.Helpers
         }
 
         /// <summary>
+        /// Adds a list of Sinks to the topology's sink collection.
+        /// </summary>
+        /// <param name="sink">SinkNodeBase to add.</param>
+        /// <returns> Graph model builder.</returns>
+        public GraphTopologyModelBuilder AddSinks(List<SinkNodeBase> sinks)
+        {
+            foreach (var sink in sinks)
+            {
+                Graph.Sinks.Add(sink);
+            }
+            
+            return this;
+        }
+
+        /// <summary>
         /// Adds a Parameter to the topology's parameters collection.
         /// </summary>
         /// <param name="parameter">ParameterDeclaration to add.</param>
