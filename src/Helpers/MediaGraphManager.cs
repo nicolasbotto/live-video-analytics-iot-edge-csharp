@@ -109,7 +109,7 @@ namespace C2D_Console.Helpers
 		/// </summary>
 		/// <param name="graphTopologyName">Graph topology name.</param>
 		/// <returns>GraphTopology model.</returns>
-		public static GraphTopology CreatePlaybackGraphTopologyModel(string graphTopologyName, string audience, string issuer, string modulus, string exponent)
+		public static GraphTopology CreatePlaybackGraphTopologyModel(string graphTopologyName, string audience, string issuer, string modulus, string exponent, string claimName, string claimValue)
 		{
 			return new GraphTopologyModelBuilder(graphTopologyName, GraphTopologyDescription)
 			   .AddSource(
@@ -171,8 +171,8 @@ namespace C2D_Console.Helpers
 									   AdditionalRequiredClaims = new List<MediaGraphClaim> {
 											new MediaGraphClaim()
                                             {
-												Name = "test",
-												Value = "sample"
+												Name = claimName,
+												Value = claimValue
                                             }
 									   }
 								   },

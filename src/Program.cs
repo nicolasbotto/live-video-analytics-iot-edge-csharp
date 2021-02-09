@@ -12,9 +12,11 @@ namespace C2D_Console
 {
     class Program
     {
-        private const string TopologyName = "CVRToAsset";
+        private const string TopologyName = "CVRToAssetRelay";
         private const string AssetNameFormat = "CVRToAsset-{0}-{1}";
         private const string RtspSourceUrl = "rtsp://rtspsim:554/media/camera-300s.mkv";
+        private const string ClaimValue = "value";
+        private const string ClaimName = "test";
 
         static async Task Main(string[] args)
         {
@@ -29,13 +31,13 @@ namespace C2D_Console
                 var clientConfig = appSettings.GetSection("AmsArmClient").Get<AmsArmClientConfiguration>();
 
                 var cryptoProvider = GraphTopologyCryptoProviderFactory.CreateAsymmetricCryptoProvider();
-                var token = cryptoProvider.GetJwtToken(clientConfig.Audience, clientConfig.Issuer, new Guid(clientConfig.AmsClientAadClientId));
+                var token = cryptoProvider.GetJwtToken(clientConfig.Audience, clientConfig.Issuer, new Guid(clientConfig.AmsAccountId), new Dictionary<string, string> { { ClaimName, ClaimValue } });
 
                 // Initialize the client
                 using var amsClient = await AmsArmClientFactory.CreateAsync(clientConfig);
 
                 // Create graph topology
-                var graphTopologyModel = MediaGraphManager.CreatePlaybackGraphTopologyModel(TopologyName, clientConfig.Audience, clientConfig.Issuer, cryptoProvider.Modulus, cryptoProvider.Exponent);
+                var graphTopologyModel = MediaGraphManager.CreatePlaybackGraphTopologyModel(TopologyName, clientConfig.Audience, clientConfig.Issuer, cryptoProvider.Modulus, cryptoProvider.Exponent, ClaimName, ClaimValue);
 
                 PrintMessage($"Creating topology {TopologyName}.", ConsoleColor.Yellow);
                 var graphTopology = await amsClient.CreateOrUpdateGraphTopologyAsync(graphTopologyModel, true);

@@ -77,5 +77,10 @@ namespace C2D_Console.Client
         /// The issuer
         /// </summary>
         public string Issuer { get; set; }
+
+        /// <summary>
+        /// The Ams Account Id
+        /// </summary>
+        public string AmsAccountId { get; set; }
     }
 }
