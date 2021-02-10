@@ -12,9 +12,8 @@ namespace C2D_Console
 {
     class Program
     {
-        private const string TopologyName = "CVRToAssetRelayTest";
+        private const string TopologyName = "CVRToAssetRelay";
         private const string AssetNameFormat = "CVRToAsset-{0}-{1}";
-        private const string RtspSourceUrl = "rtsp://rtspsim:554/media/camera-300s.mkv";
         private const string ClaimValue = "value";
         private const string ClaimName = "test";
         private const string WebsocketUrl = "wss://{0}.device-tunnel-001.graph.{1}.media.azure.net/rtsp/{2}/rtspServerSink";
@@ -30,17 +29,22 @@ namespace C2D_Console
                     .Build();
 
                 var clientConfig = appSettings.GetSection("AmsArmClient").Get<AmsArmClientConfiguration>();
+                var relaySettings = appSettings.GetSection("RelaySettings").Get<RelaySettingConfiguration>();
 
                 var cryptoProvider = GraphTopologyCryptoProviderFactory.CreateAsymmetricCryptoProvider();
-                var token = cryptoProvider.GetJwtToken(clientConfig.Audience, clientConfig.Issuer, 
-                    new Guid(clientConfig.AmsAccountId), 
+
+                // Get the authorizatoin token for accessing the stream using Web Socket client
+                // Important: the audience, issuer and claims used by CryptoProvider must match the ones
+                // set in the MediaGraphJwtTokenAuthorizationProvider of the MediaGraphRtspServerSink.
+                var token = cryptoProvider.GetJwtToken(relaySettings.Audience, relaySettings.Issuer, 
+                    new Guid(relaySettings.AmsAccountId), 
                     new Dictionary<string, string> { { ClaimName, ClaimValue } });
 
                 // Initialize the client
                 using var amsClient = await AmsArmClientFactory.CreateAsync(clientConfig);
 
                 // Create graph topology
-                var graphTopologyModel = MediaGraphManager.CreatePlaybackGraphTopologyModel(TopologyName, clientConfig.Audience, clientConfig.Issuer, cryptoProvider.Modulus, cryptoProvider.Exponent, ClaimName, ClaimValue);
+                var graphTopologyModel = MediaGraphManager.CreatePlaybackGraphTopologyModel(TopologyName, relaySettings.Audience, relaySettings.Issuer, cryptoProvider.Modulus, cryptoProvider.Exponent, ClaimName, ClaimValue);
 
                 PrintMessage($"Creating topology {TopologyName}.", ConsoleColor.Yellow);
                 var graphTopology = await amsClient.CreateOrUpdateGraphTopologyAsync(graphTopologyModel, true);
@@ -56,6 +60,8 @@ namespace C2D_Console
                 }
                 
                 List<GraphInstance> graphInstances = new List<GraphInstance>();
+                PrintMessage("Enter the device id:", ConsoleColor.Yellow);
+                var deviceId = Console.ReadLine();
 
                 for (int i = 0; i < option; i++)
                 {
@@ -64,17 +70,16 @@ namespace C2D_Console
 
                     graphInstanceName = assetName = string.Format(AssetNameFormat, DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd-hh-mm-ss"), i);
 
-                    PrintMessage("Enter the device id:", ConsoleColor.Yellow);
-                    var deviceId = Console.ReadLine();
-
                     // Create graph instance
                     var graphInstanceModel = MediaGraphManager.CreateGraphInstanceModel(
                                   graphInstanceName,
                                   TopologyName,
                                   assetName,
-                                  RtspSourceUrl,
-                                  clientConfig.IoTHubArmId,
-                                  deviceId);
+                                  relaySettings.RtspSourceUrl,
+                                  relaySettings.IoTHubArmId,
+                                  deviceId,
+                                  relaySettings.RtspUsername,
+                                  relaySettings.RtspPassword);
 
                     PrintMessage($"Creating instance {graphInstanceName}.", ConsoleColor.Yellow);
                     var graphInstance = await amsClient.CreateOrUpdateGraphInstanceAsync(graphInstanceModel, true);
@@ -105,10 +110,10 @@ namespace C2D_Console
                     }
                     
                     PrintMessage($"Instance {graphInstanceName} has been activated.", ConsoleColor.Green);
-                    PrintMessage($"Web socket URL:\n {string.Format(WebsocketUrl, clientConfig.AmsAccountName, clientConfig.AmsClusterName, graphInstanceName)}", ConsoleColor.Cyan);
+                    PrintMessage($"Web socket URL:\n{string.Format(WebsocketUrl, clientConfig.AmsAccountName, relaySettings.AmsClusterName, graphInstanceName)}", ConsoleColor.Cyan);
                 }
 
-                PrintMessage($"Token:\n {token}", ConsoleColor.Cyan);
+                PrintMessage($"Token:\n{token}", ConsoleColor.Cyan);
                 PrintMessage("Press Enter to continue to deactivate instance.", ConsoleColor.Yellow);
                 Console.ReadLine();
 

@@ -5,16 +5,14 @@
 //-----------------------------------------------------------------------
 
 using Microsoft.Azure.Management.Media.LvaDev.Models;
-using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 
 namespace C2D_Console.Helpers
 {
-	/// <summary>
-	/// A helper class to manage runner Media Graph operations.
-	/// </summary>
-	public static class MediaGraphManager
+    /// <summary>
+    /// A helper class to manage runner Media Graph operations.
+    /// </summary>
+    public static class MediaGraphManager
 	{
 		private const string GraphInstanceDescription = "Graph Instance Description";
 		private const string GraphTopologyDescription = "Graph Topology Description";
@@ -45,7 +43,7 @@ namespace C2D_Console.Helpers
 							Url = "${" + RtspUrlParameterName + "}",
 							Credentials = new MediaGraphUsernamePasswordCredentials
 							{
-								Username = RtspUsernameParameterName,
+								Username = "${" + RtspUsernameParameterName + "}",
 								Password = "${" + RtspPasswordParameterName + "}",
 							},
 							Tunnel = new MediaGraphIoTSecureDeviceRemoteTunnel("${" + RtspIoTHubArmIdName + "}", "${" + RtspDeviceIdName + "}")
@@ -73,6 +71,13 @@ namespace C2D_Console.Helpers
 							Type = ParameterDeclarationType.String,
 							DefaultProperty = "defaultAsset",
 							Description = "asset name parameter",
+						},
+						new ParameterDeclaration
+						{
+							Name = RtspUsernameParameterName,
+							Type = ParameterDeclarationType.String,
+							DefaultProperty = "defaultUsername",
+							Description = "rtsp username parameter",
 						},
 						new ParameterDeclaration
 						{
@@ -122,7 +127,7 @@ namespace C2D_Console.Helpers
 							Url = "${" + RtspUrlParameterName + "}",
 							Credentials = new MediaGraphUsernamePasswordCredentials
 							{
-								Username = RtspUsernameParameterName,
+								Username = "${" + RtspUsernameParameterName + "}",
 								Password = "${" + RtspPasswordParameterName + "}",
 							},
 							Tunnel = new MediaGraphIoTSecureDeviceRemoteTunnel("${" + RtspIoTHubArmIdName + "}", "${" + RtspDeviceIdName + "}")
@@ -160,7 +165,6 @@ namespace C2D_Console.Helpers
 								   {
 									   Audience = audience,
 									   Issuer = issuer,
-									   //IgnoreResource = "false",
 									   VerificationKeys = new List<MediaGraphCredentials> {
 											new ContentKeyPolicyRsaTokenKey()
 											{
@@ -194,6 +198,13 @@ namespace C2D_Console.Helpers
 							Type = ParameterDeclarationType.String,
 							DefaultProperty = "defaultAsset",
 							Description = "asset name parameter",
+						},
+						new ParameterDeclaration
+						{
+							Name = RtspUsernameParameterName,
+							Type = ParameterDeclarationType.String,
+							DefaultProperty = "defaultUsername",
+							Description = "rtsp username parameter",
 						},
 						new ParameterDeclaration
 						{
@@ -235,6 +246,8 @@ namespace C2D_Console.Helpers
 		/// <param name="rtspSourceUrl">Rtsp source URL.</param>
 		/// <param name="rtspIotHubArmId">Rtsp source IoT Hub Arm ID.</param>
 		/// <param name="rtspDeviceId">Rtsp device ID.</param>
+		/// <param name="rtspUsername">Rtsp username.</param>
+		/// <param name="rtspPassword">Rtsp password.</param>
 		/// <returns>GraphInstance model.</returns>
 		public static GraphInstance CreateGraphInstanceModel(
 			string graphInstanceName,
@@ -242,7 +255,9 @@ namespace C2D_Console.Helpers
 			string assetName,
 			string rtspSourceUrl,
 			string rtspIotHubArmId,
-			string rtspDeviceId)
+			string rtspDeviceId,
+			string rtspUsername,
+			string rtspPassword)
 		{
 			return new GraphInstanceModelBuilder(graphTopologyName, graphInstanceName, GraphInstanceDescription)
 				.AddParameters(
@@ -255,8 +270,13 @@ namespace C2D_Console.Helpers
 						},
 						new ParameterDefinition
 						{
+							Name = RtspUsernameParameterName,
+							Value = rtspUsername,
+						},
+						new ParameterDefinition
+						{
 							Name = RtspPasswordParameterName,
-							Value = "password",
+							Value = rtspPassword,
 						},
 						new ParameterDefinition
 						{
