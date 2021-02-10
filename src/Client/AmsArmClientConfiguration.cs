@@ -82,5 +82,10 @@ namespace C2D_Console.Client
         /// The Ams Account Id
         /// </summary>
         public string AmsAccountId { get; set; }
+
+        /// <summary>
+        /// The Ams Cluster name
+        /// </summary>
+        public string AmsClusterName { get; set; }
     }
 }

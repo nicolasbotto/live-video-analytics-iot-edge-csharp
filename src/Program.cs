@@ -12,11 +12,12 @@ namespace C2D_Console
 {
     class Program
     {
-        private const string TopologyName = "CVRToAssetRelay";
+        private const string TopologyName = "CVRToAssetRelayTest";
         private const string AssetNameFormat = "CVRToAsset-{0}-{1}";
         private const string RtspSourceUrl = "rtsp://rtspsim:554/media/camera-300s.mkv";
         private const string ClaimValue = "value";
         private const string ClaimName = "test";
+        private const string WebsocketUrl = "wss://{0}.device-tunnel-001.graph.{1}.media.azure.net/rtsp/{2}/rtspServerSink";
 
         static async Task Main(string[] args)
         {
@@ -31,7 +32,9 @@ namespace C2D_Console
                 var clientConfig = appSettings.GetSection("AmsArmClient").Get<AmsArmClientConfiguration>();
 
                 var cryptoProvider = GraphTopologyCryptoProviderFactory.CreateAsymmetricCryptoProvider();
-                var token = cryptoProvider.GetJwtToken(clientConfig.Audience, clientConfig.Issuer, new Guid(clientConfig.AmsAccountId), new Dictionary<string, string> { { ClaimName, ClaimValue } });
+                var token = cryptoProvider.GetJwtToken(clientConfig.Audience, clientConfig.Issuer, 
+                    new Guid(clientConfig.AmsAccountId), 
+                    new Dictionary<string, string> { { ClaimName, ClaimValue } });
 
                 // Initialize the client
                 using var amsClient = await AmsArmClientFactory.CreateAsync(clientConfig);
@@ -100,9 +103,18 @@ namespace C2D_Console
                     {
                         throw new InvalidOperationException("The graph instance is in an invalid state");
                     }
+                    
                     PrintMessage($"Instance {graphInstanceName} has been activated.", ConsoleColor.Green);
-                    PrintMessage("Press Enter to continue to deactivate instance.", ConsoleColor.Yellow);
-                    Console.ReadLine();
+                    PrintMessage($"Web socket URL:\n {string.Format(WebsocketUrl, clientConfig.AmsAccountName, clientConfig.AmsClusterName, graphInstanceName)}", ConsoleColor.Cyan);
+                }
+
+                PrintMessage($"Token:\n {token}", ConsoleColor.Cyan);
+                PrintMessage("Press Enter to continue to deactivate instance.", ConsoleColor.Yellow);
+                Console.ReadLine();
+
+                foreach (var graphInstance in graphInstances)
+                {
+                    var graphInstanceName = graphInstance.Name;
 
                     // Deactivate instance
                     PrintMessage($"Deactivating instance {graphInstanceName}.", ConsoleColor.Yellow);
