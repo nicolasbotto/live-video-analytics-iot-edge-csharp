@@ -106,7 +106,7 @@
                     ]
                   },                  
                   "Binds": [
-                    "$INPUT_VIDEO_FOLDER_ON_DEVICE:/live/mediaServer/media"
+                    "$VIDEO_INPUT_FOLDER_ON_DEVICE:/live/mediaServer/media"
                   ]
                 }
               }
