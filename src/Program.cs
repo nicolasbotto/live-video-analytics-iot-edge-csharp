@@ -43,19 +43,34 @@ namespace C2D_Console
                 // Initialize the client
                 using var amsClient = await AmsArmClientFactory.CreateAsync(clientConfig);
 
+                // Check if graph topology exists
+                var graphTopology = await amsClient.GetGraphTopologyAsync(TopologyName);
+
+                if (graphTopology != null)
+                {
+                    PrintMessage($"A graph topology named {TopologyName} already exists.", ConsoleColor.DarkGreen);
+                    PrintMessage("Enter Y to re-use it otherwise N to exit.", ConsoleColor.Yellow);
+                    string userInput = Console.ReadLine();
+
+                    if (userInput.Equals("N", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return;
+                    }
+                }
+
                 // Create graph topology
                 var graphTopologyModel = MediaGraphManager.CreatePlaybackGraphTopologyModel(TopologyName, relaySettings.Audience, relaySettings.Issuer, cryptoProvider.Modulus, cryptoProvider.Exponent, ClaimName, ClaimValue);
 
                 PrintMessage($"Creating topology {TopologyName}.", ConsoleColor.Yellow);
-                var graphTopology = await amsClient.CreateOrUpdateGraphTopologyAsync(graphTopologyModel, true);
+                graphTopology = await amsClient.CreateOrUpdateGraphTopologyAsync(graphTopologyModel, true);
                 PrintMessage($"Topology {TopologyName} has been created.", ConsoleColor.Green);
 
                 PrintMessage("Enter the number of graph instances to create:", ConsoleColor.Yellow);
                 int option;
                 string input = Console.ReadLine();
-                while (!int.TryParse(input, out option))
+                while (!int.TryParse(input, out option) || option < 1)
                 {
-                    PrintMessage("Not a valid option, try again...", ConsoleColor.Red);
+                    PrintMessage("Not a valid option, you must enter a number greater than 0, try again...", ConsoleColor.Red);
                     input = Console.ReadLine();
                 }
                 
