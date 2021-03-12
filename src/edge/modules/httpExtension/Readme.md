@@ -113,11 +113,8 @@ The topology (i.e. https://github.com/Azure/live-video-analytics/blob/master/Med
             "width": "416",
             "height": "416"
           },
-          "format":
-          {
-            "@type": "#Microsoft.Media.MediaGraphImageFormatEncoded",
-            "encoding": "jpeg",
-            "quality": "90"
+          "format": {
+            "@type": "#Microsoft.Media.MediaGraphImageFormatBmp"
           }
         }
       }
