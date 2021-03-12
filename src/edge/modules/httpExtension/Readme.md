@@ -83,12 +83,8 @@ The topology (i.e. https://github.com/Azure/live-video-analytics/blob/master/Med
   "default": "https://<REPLACE-WITH-IP-OR-CONTAINER-NAME>/score"
 }
 ```
-* Configuration
+* Note the configuration of the extension processor
 ```
-{
-  "@apiVersion": "2.0",
-  "name": "TopologyName",
-  "properties": {
     "processors": [
       {
         "@type": "#Microsoft.Media.MediaGraphHttpExtension",
@@ -119,8 +115,7 @@ The topology (i.e. https://github.com/Azure/live-video-analytics/blob/master/Med
         }
       }
     ]
-  }
-}
+
 ```
 ## Using the http extension container
 
