@@ -73,7 +73,7 @@
                               "max-file": "10"
                             }
                           },
-                          "IpcMode" : "host"
+                          "IpcMode" : "shareable"
                         }
                       }
                     }
@@ -94,7 +94,7 @@
                                       "max-file": "10"
                                     }
                                 },        
-                                "IpcMode": "host",
+                                "IpcMode": "container:lvaEdge",
                                 "Binds": [
                                   "$VIDEO_OUTPUT_FOLDER_ON_DEVICE:/var/media/",
                                   "$APPDATA_FOLDER_ON_DEVICE:/var/lib/azuremediaservices"

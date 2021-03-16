@@ -72,7 +72,7 @@
                     "$VIDEO_OUTPUT_FOLDER_ON_DEVICE:/var/media/",
                     "$APPDATA_FOLDER_ON_DEVICE:/var/lib/azuremediaservices"
                   ],
-                  "IpcMode": "host"
+                  "IpcMode": "shareable"
                 }
               }
             }
@@ -86,7 +86,7 @@
                 "image": "mcr.microsoft.com/lva-utilities/lvaextension:grpc-yolov3-onnx-v1.0",
                 "createOptions": {
                     "HostConfig": {                                  
-                        "IpcMode": "host"        
+                        "IpcMode": "container:lvaEdge"        
                     }
                 }
             }
@@ -111,7 +111,7 @@
                         "$VIDEO_OUTPUT_FOLDER_ON_DEVICE:/var/media/",
                         "$APPDATA_FOLDER_ON_DEVICE:/var/lib/azuremediaservices"
                       ],                              
-                      "IpcMode": "host"        
+                      "IpcMode": "container:lvaEdge"        
                     }
                 }
             }
