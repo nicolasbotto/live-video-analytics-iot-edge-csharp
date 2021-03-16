@@ -63,7 +63,31 @@
             "status": "running",
             "restartPolicy": "always",
             "settings": {
-              "image": "mcr.microsoft.com/media/live-video-analytics:1",
+              "image": "mcr.microsoft.com/media/live-video-analytics:2",
+              "createOptions": {
+                "HostConfig": {
+                  "LogConfig": {
+                    "Type": "",
+                    "Config": {
+                      "max-size": "10m",
+                      "max-file": "10"
+                    }
+                  },
+                  "Binds": [
+                    "$VIDEO_OUTPUT_FOLDER_ON_DEVICE:/var/media/",
+                    "$APPDATA_FOLDER_ON_DEVICE:/var/lib/azuremediaservices"
+                  ]
+                }
+              }
+            }
+          },
+          "lvaExtension": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "$CONTAINER_REGISTRY_USERNAME_myacr.azurecr.io/httpextension:latest",
               "createOptions": {
                 "HostConfig": {
                   "LogConfig": {
@@ -77,18 +101,6 @@
               }
             }
           },
-
-          "lvaExtension": {
-            "version": "1.0",
-            "type": "docker",
-            "status": "running",
-            "restartPolicy": "always",
-            "settings": {
-              "image": "${MODULES.httpExtension}",
-              "createOptions": {}
-            }
-          },
-
           "rtspsim": {
             "version": "1.0",
             "type": "docker",
@@ -104,7 +116,7 @@
                         "HostPort": "8554"
                       }
                     ]
-                  },                  
+                  },
                   "Binds": [
                     "$VIDEO_INPUT_FOLDER_ON_DEVICE:/live/mediaServer/media"
                   ]

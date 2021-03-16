@@ -99,8 +99,19 @@
             "settings": {
                 "image": "mcr.microsoft.com/lva-utilities/lvaextension:grpc-yolov3-tiny-onnx-v1.0",
                 "createOptions": {
-                    "HostConfig": {                                  
-                        "IpcMode": "host"        
+                    "HostConfig": {    
+                        "LogConfig": {
+                          "Type": "",
+                          "Config": {
+                              "max-size": "10m",
+                              "max-file": "10"
+                          }
+                      },
+                      "Binds": [
+                        "$VIDEO_OUTPUT_FOLDER_ON_DEVICE:/var/media/",
+                        "$APPDATA_FOLDER_ON_DEVICE:/var/lib/azuremediaservices"
+                      ],                              
+                      "IpcMode": "host"        
                     }
                 }
             }
