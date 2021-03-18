@@ -81,16 +81,6 @@
               }
             }
           },
-          "yolov3": {
-            "version": "1.0",
-            "type": "docker",
-            "status": "running",
-            "restartPolicy": "always",
-            "settings": {
-              "image": "mcr.microsoft.com/lva-utilities/yolov3-onnx:1.0",
-              "createOptions": ""
-            }
-          },
           "rtspsim": {
             "version": "1.0",
             "type": "docker",
@@ -113,8 +103,23 @@
             "status": "running",
             "restartPolicy": "always",
             "settings": {
-              "image": "${MODULES.objectCounter}",
+              "image": "$CONTAINER_REGISTRY_USERNAME_myacr.azurecr.io/objcounter:test1",
               "createOptions": {}
+            }
+          },
+          "lvaExtension": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "marketplace.azurecr.io/intel_corporation/open_vino:latest",
+              "createOptions": {
+                "ExposedPorts": {
+                  "4000/tcp": {}
+                },
+                "Cmd": ["/ams_wrapper/start_ams.py","--ams_port=4000","--ovms_port=5001"]
+              }
             }
           }
         }
@@ -128,7 +133,7 @@
           "LVAToObjectCounter": "FROM /messages/modules/lvaEdge/outputs/detectedObjects INTO BrokeredEndpoint(\"/modules/objectCounter/inputs/detectedObjects\")",
           "LVADiagnosticsToIoTHub": "FROM /messages/modules/lvaEdge/outputs/AmsDiagnostics/* INTO $upstream",
           "LVAOperationalToIoTHub": "FROM /messages/modules/lvaEdge/outputs/AmsOperational/* INTO $upstream",
-          "ObjectCounterToLVA": "FROM /messages/modules/objectCounter/outputs/objectCountTrigger INTO BrokeredEndpoint(\"/modules/lvaEdge/inputs/recordingTrigger\")"
+          "ObjectCounterToLVA": "FROM /messages/modules/objectCounter/outputs/objectsEventFilterTrigger INTO BrokeredEndpoint(\"/modules/lvaEdge/inputs/recordingTrigger\")"
         },
         "storeAndForwardConfiguration": {
           "timeToLiveSecs": 7200
@@ -155,8 +160,11 @@
     },
     "objectCounter": {
       "properties.desired": {
-        "objectTag": "truck",
-        "objectConfidence": 0.5
+        "objectTypeValue": "truck",
+        "objectTypeName": "type",
+        "objectTagValue": "red",
+        "objectTagName": "color",
+        "objectConfidence": 0.9
       }
     }
   }

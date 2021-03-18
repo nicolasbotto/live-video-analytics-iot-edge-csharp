@@ -1,4 +1,4 @@
-namespace objectCounter
+namespace ObjectEventFilter
 {
     using System;
     using System.IO;
@@ -12,13 +12,16 @@ namespace objectCounter
     using Microsoft.Azure.Devices.Shared;
     using Microsoft.Azure.Devices.Client;
     using Microsoft.Azure.Devices.Client.Transport.Mqtt;
-
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
 
     class Program
     {
-        static string objectTag = "";
-        static double objectConfidence = 0;        
+        static string objectTagValue = "";
+        static string objectTypeValue = "";
+        static string objectTagName = "";
+        static string objectTypeName = "";
+        static double objectConfidence = 0;
 
         static void Main(string[] args)
         {
@@ -56,7 +59,7 @@ namespace objectCounter
             Console.WriteLine("IoT Hub module client initialized.");
 
             // Register callback to be called when a message is received by the module
-            await ioTHubModuleClient.SetInputMessageHandlerAsync("detectedObjects", CountObjects, ioTHubModuleClient);
+            await ioTHubModuleClient.SetInputMessageHandlerAsync("detectedObjects", SendEventByFilter, ioTHubModuleClient);
 
             // Register callback to be called when desired property changes
             await ioTHubModuleClient.SetDesiredPropertyUpdateCallbackAsync(OnDesiredPropertyChanged, ioTHubModuleClient);
@@ -67,9 +70,24 @@ namespace objectCounter
 
         private static void ReadDesiredProperties(TwinCollection desiredProperties)
         {
-            if (desiredProperties.Contains("objectTag"))
+            if (desiredProperties.Contains("objectTagValue"))
             {
-                objectTag = desiredProperties["objectTag"];
+                objectTagValue = desiredProperties["objectTagValue"];
+            }
+
+            if (desiredProperties.Contains("objectTypeValue"))
+            {
+                objectTypeValue = desiredProperties["objectTypeValue"];
+            }
+
+            if (desiredProperties.Contains("objectTagName"))
+            {
+                objectTagName = desiredProperties["objectTagName"];
+            }
+
+            if (desiredProperties.Contains("objectTypeName"))
+            {
+                objectTypeName = desiredProperties["objectTypeName"];
             }
 
             if (desiredProperties.Contains("objectConfidence"))
@@ -77,8 +95,9 @@ namespace objectCounter
                 objectConfidence = desiredProperties["objectConfidence"];            
             }
 
-            Console.WriteLine("objectTag set to " + objectTag);
-            Console.WriteLine("objectConfidence set to " + objectConfidence.ToString());            
+            Console.WriteLine($"objectTag set to {objectTagValue}");
+            Console.WriteLine($"objectType set to {objectTypeValue}");            
+            Console.WriteLine($"objectConfidence set to {objectConfidence}");            
         }
 
         private static async Task OnDesiredPropertyChanged(TwinCollection desiredProperties, object userContext)
@@ -105,7 +124,7 @@ namespace objectCounter
         /// <summary>
         /// This method is called whenever the module is sent a message from the EdgeHub.         
         /// </summary>
-        static async Task<MessageResponse> CountObjects(Message message, object userContext)
+        static async Task<MessageResponse> SendEventByFilter(Message message, object userContext)
         {            
             var moduleClient = userContext as ModuleClient;
             if (moduleClient == null)
@@ -115,39 +134,24 @@ namespace objectCounter
 
             byte[] messageBytes = message.GetBytes();
             string messageString = Encoding.UTF8.GetString(messageBytes);
-            //Console.WriteLine($"Received message: Body: [{messageString}]");
 
             if (!string.IsNullOrEmpty(messageString))
             {
-                int count = 0;
-                dynamic inputMessage = JsonConvert.DeserializeObject(messageString);
-                dynamic detectedObjects = inputMessage.inferences;
-                
-                if (detectedObjects != null)
-                {
-                    foreach (dynamic inference in detectedObjects)
-                    {
-                        dynamic entity = inference["entity"];
-                        dynamic tag = entity["tag"];
+                var inferences = JObject.Parse(messageString);
 
-                        if ((tag["value"] == objectTag) && (tag["confidence"] > objectConfidence))
-                        {
-                            count++;
-                        }
-                    }
-                }
-                
-                if (count > 0)
-                {
-                    string outputMsgString = JsonConvert.SerializeObject(new Dictionary<string, int>() {
-                                                                                { "count", count }
-                                                                            });
-                    byte[] outputMsgBytes = System.Text.Encoding.UTF8.GetBytes(outputMsgString);                
+                var colorItem = inferences.SelectToken($"inferences[?(@.subtype == '{objectTagName}')]").SelectToken("classification.tag.value").ToString();
+                var typeItem = inferences.SelectToken($"inferences[?(@.subtype == '{objectTypeName}')]");
+                var typeValue = typeItem.SelectToken("classification.tag.value").ToString();
+                var typeConfidence = (double)typeItem.SelectToken("classification.tag.confidence");
 
+                Console.WriteLine($"{objectTypeValue} : {objectTagValue} : {objectConfidence}");
+
+                if (colorItem == objectTagValue && typeValue == objectTypeValue && typeConfidence >= objectConfidence)
+                {
+                    string outputMsgString = $"Detected {objectTypeValue} with attribute {objectTagValue}";
+                    byte[] outputMsgBytes = System.Text.Encoding.UTF8.GetBytes(outputMsgString);
                     using (var outputMessage = new Message(outputMsgBytes))
                     {
-                        //outputMessage.Properties.Add("eventType", "Microsoft.Media.Graph.Signaling.SignalGateTrigger");
-                        
                         string subject = message.Properties["subject"];
                         string graphInstanceSignature = "/graphInstances/";
                         if (subject.IndexOf(graphInstanceSignature) == 0)
@@ -155,19 +159,10 @@ namespace objectCounter
                             int graphInstanceNameIndex = graphInstanceSignature.Length;
                             int graphInstanceNameEndIndex = subject.IndexOf("/", graphInstanceNameIndex);
                             string graphInstanceName = subject.Substring(0, graphInstanceNameEndIndex);
-                            //outputMessage.Properties.Add("eventTarget", graphInstanceName);
-
                             outputMessage.Properties.Add("eventTime", message.Properties["eventTime"]);
-                            await moduleClient.SendEventAsync("objectCountTrigger", outputMessage);
+                            await moduleClient.SendEventAsync("objectsEventFilterTrigger", outputMessage);
                         }
-
-                    
-                       // Console.WriteLine("Message sent: " + outputMsgString);
                     }
-                }
-                else
-                {
-                    //Console.WriteLine("No message sent as object count was zero");
                 }
             }
             return MessageResponse.Completed;
