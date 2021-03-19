@@ -1,19 +1,17 @@
 namespace ObjectEventFilter
 {
     using System;
-    using System.IO;
-    using System.Collections.Generic;
-    using System.Runtime.InteropServices;
     using System.Runtime.Loader;
-    using System.Security.Cryptography.X509Certificates;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Devices.Shared;
     using Microsoft.Azure.Devices.Client;
     using Microsoft.Azure.Devices.Client.Transport.Mqtt;
+    using System.Linq;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using System.Collections.Generic;
 
     class Program
     {
@@ -139,16 +137,32 @@ namespace ObjectEventFilter
             {
                 var inferences = JObject.Parse(messageString);
 
-                var colorItem = inferences.SelectToken($"inferences[?(@.subtype == '{objectTagName}')]").SelectToken("classification.tag.value").ToString();
-                var typeItem = inferences.SelectToken($"inferences[?(@.subtype == '{objectTypeName}')]");
-                var typeValue = typeItem.SelectToken("classification.tag.value").ToString();
-                var typeConfidence = (double)typeItem.SelectToken("classification.tag.confidence");
-
-                Console.WriteLine($"{objectTypeValue} : {objectTagValue} : {objectConfidence}");
-
-                if (colorItem == objectTagValue && typeValue == objectTypeValue && typeConfidence >= objectConfidence)
+                var typeItem = inferences.SelectTokens("$..entity");
+                var found = false;
+                var confidenceValue = 0.0d;
+                foreach (var item in typeItem)
                 {
-                    string outputMsgString = $"Detected {objectTypeValue} with attribute {objectTagValue}";
+                    var hasColor = item.SelectToken("attributes").Any(x => (x.SelectToken("name").ToString() == objectTagName && x.SelectToken("value").ToString() == objectTagValue));
+                    var hasType = item.SelectToken("attributes").Any(x => (x.SelectToken("name").ToString() == objectTypeName && x.SelectToken("value").ToString() == objectTypeValue));
+                    confidenceValue = (double)item.SelectToken("tag.confidence");
+                    var hasConfidence = confidenceValue >= objectConfidence;
+
+                    if(hasColor && hasType && hasConfidence)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found)
+                {
+                    var result = new Dictionary<string, object> {
+                        { "confidence", confidenceValue },
+                        { objectTagName, objectTagValue },
+                        { objectTypeName, objectTypeValue }
+                    };
+
+                    string outputMsgString = JsonConvert.SerializeObject(result);
                     byte[] outputMsgBytes = System.Text.Encoding.UTF8.GetBytes(outputMsgString);
                     using (var outputMessage = new Message(outputMsgBytes))
                     {
