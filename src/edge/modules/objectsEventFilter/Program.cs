@@ -127,7 +127,7 @@ namespace ObjectEventFilter
             var moduleClient = userContext as ModuleClient;
             if (moduleClient == null)
             {
-                throw new InvalidOperationException("UserContext doesn't contain " + "expected values");
+                throw new InvalidOperationException("UserContext doesn't contain expected values");
             }
 
             byte[] messageBytes = message.GetBytes();
